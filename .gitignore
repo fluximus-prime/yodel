@@ -1,4 +1,240 @@
+######
+# Combined Collection of .gitignore Templates
+#   - https://github.com/github/gitignore
+######
+
+###
+# Language-Specific Ignores (Gleam, Erlang, Elixir, .NET Core)
+###
+
+# Compiled files
 *.beam
 *.ez
+*.o
+*.plt
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.pyc
+
+# Build and output directories
 /build
+/_build
+/_checkouts
+/ebin
+/deps
+/cover
+/doc
+/bin
+/obj
+/out
+/[Dd]ebug
+/[Rr]elease
+/x64
+/x86
+/bld
+/nupkg
+
+# Crash dumps and logs
 erl_crash.dump
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Language-specific files
+.eunit
+.concrete/DEV_MODE
+.fetch
+.elixir_ls/
+/config/*.secret.exs
+project.lock.json
+
+# Rebar specific
+.rebar
+.rebar3
+rel/example_project
+
+###
+# Environment Variables and Logs
+###
+.env
+.env.*.local
+.env.local
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+###
+# Operating System Specific
+###
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+###
+# IDE/Editor Specific
+###
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.history/
+*.vsix
+
+# JetBrains IDEs
+.idea
+*.iws
+out/
+.idea_modules/
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+cmake-build-*/
+
+# Eclipse
+.metadata
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.externalToolBuilders/
+*.launch
+.factorypath
+.buildpath
+.target
+.tern-project
+.texlipse
+.springBeans
+.recommenders/
+.apt_generated/
+.apt_generated_test/
+.cache-main
+.scala_dependencies
+.worksheet
+
+# Kate
+.*.kate-swp
+.swp.*
+
+# Notepad++
+*.bak
+
+###
+# Node.js Specific
+###
+
+pids
+*.pid
+*.seed
+*.pid.lock
+lib-cov
+coverage
+*.lcov
+.nyc_output
+.grunt
+bower_components
+.lock-wscript
+build/Release
+node_modules/
+jspm_packages/
+web_modules/
+*.tsbuildinfo
+.npm
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.node_repl_history
+*.tgz
+.yarn-integrity
+.cache
+.parcel-cache
+.next
+.nuxt
+dist
+.vuepress/dist
+.temp
+.cache
+.docusaurus
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+###
+# .NET Core Specific
+###
+
+*.swp
+*.*~
+.vs/
+
+###
+# Project Specific (add your custom ignores here)
+###
+
+# gleescript binary name
+/app
