@@ -1,0 +1,8 @@
+# Uses strict version numbering.
+#  - https://github.com/erlef/setup-beam?tab=readme-ov-file#strict-versions
+#  - https://github.com/erlef/setup-beam?tab=readme-ov-file#version-file
+
+erlang 26.2.5.1
+# elixir 1.17.2
+gleam 1.5.1
+rebar 3.24.0
