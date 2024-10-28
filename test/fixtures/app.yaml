@@ -1,0 +1,43 @@
+defaults:
+  version: ${VERSION:1.0}
+  enabled: ${ENABLED:true}
+
+servers:
+  - name: server1
+    ip: ${SERVER1_IP:192.168.1.1}
+    port: 9876
+    roles: [web, database]
+  - name: server2
+    ip: ${SERVER2_IP:192.168.1.2}
+    roles: [web]
+  - name: server3
+    ip: ${SERVER3_IP:192.168.1.3}
+    roles: []
+
+database:
+  host: ${DB_HOST:localhost}
+  port: ${DB_PORT:5432}
+  credentials:
+    username: ${DB_USER:admin}
+    password: ${DB_PASS:"p@ssw0rd!"}
+
+features:
+  - logging
+  - monitoring
+  - "multi-line\nfeature"
+
+nested:
+  level1:
+    level2:
+      level3: ${NESTED_VALUE:value}
+
+empty_list: []
+
+special_chars: "This is a string with special characters: !@#$%^&*()"
+
+multi_line_string: |
+  This is a multi-line string.
+  It spans multiple lines.
+  Edge cases are important.
+
+no_default: ${NO_DEFAULT}

@@ -1,0 +1,15 @@
+{
+  "servers": [
+    {
+      "name": "server1",
+      "ip": "${SERVER1_IP:localhost}",
+      "roles": ["dev"]
+    }
+  ],
+  "database": {
+    "credentials": {
+      "username": "${DB_USER:dev_admin}",
+      "password": "${DB_PASS:\"dev_p@ssw0rd!\"}"
+    }
+  }
+}
