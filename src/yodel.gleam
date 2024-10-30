@@ -11,19 +11,6 @@ import gleam/list
 import gleam/regex.{type Regex}
 import gleam/string
 
-pub fn main() {
-  case load(Config(path: "./test/fixtures/short.yaml")) {
-    Ok(ctx) -> {
-      io.debug("Yodel successfully loaded!")
-      let reslt = get_string_or(ctx, "test.foo.bar", "NOTHING FOUND")
-      io.debug("test.foo.bar == " <> reslt)
-    }
-    Error(_) -> {
-      io.debug("Yodel failed to load!")
-    }
-  }
-}
-
 pub type YodelContext {
   YodelContext(props: Properties)
 }
