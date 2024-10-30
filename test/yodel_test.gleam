@@ -31,6 +31,11 @@ pub fn yodel_tests() {
         |> yodel.get_string_or("foo.bar", "error")
         |> expect.to_equal("fooey")
       }),
+      it("should not load basic yaml file", fn() {
+        yodel.load_file("fake.yaml")
+        |> expect.to_be_error
+        Nil
+      }),
     ]),
     describe("json tests", [
       it("should load basic json value", fn() {
@@ -57,6 +62,11 @@ pub fn yodel_tests() {
         config
         |> yodel.get_string_or("foo.bar", "error")
         |> expect.to_equal("fooey")
+      }),
+      it("should not load basic json file", fn() {
+        yodel.load_file("fake.json")
+        |> expect.to_be_error
+        Nil
       }),
     ]),
   ])

@@ -8,8 +8,9 @@ import gleam/float
 import gleam/int
 import gleam/list
 import gleam/regex.{type Regex}
+import gleam/result
 import gleam/string
-import simplifile
+import simplifile.{type FileError}
 
 pub type YodelContext {
   YodelContext(props: Properties)
@@ -20,14 +21,13 @@ pub type Properties =
 
 pub type YodelError {
   InvalidPath(error: String)
+  InvalidContent(error: String)
 }
 
 pub fn load_file(from file_path: String) -> Result(YodelContext, YodelError) {
-  let config = case simplifile.read(file_path) {
-    Ok(content) -> content
-    Error(_) -> "Could not read file"
-  }
-  load_string(config)
+  simplifile.read(file_path)
+  |> result.map_error(fn(err) { InvalidPath(err |> file_error_to_string) })
+  |> result.try(load_string)
 }
 
 pub fn load_string(from config: String) -> Result(YodelContext, YodelError) {
@@ -40,7 +40,7 @@ pub fn load_string(from config: String) -> Result(YodelContext, YodelError) {
       |> Ok
     }
     Error(err) -> {
-      Error(InvalidPath(err |> doc_error_to_string))
+      Error(InvalidContent(err |> doc_error_to_string))
     }
   }
 }
@@ -173,4 +173,8 @@ fn doc_error_to_string(error: DocError) -> String {
   <> int.to_string(col)
   <> ": "
   <> msg
+}
+
+fn file_error_to_string(error: FileError) -> String {
+  simplifile.describe_error(error)
 }
