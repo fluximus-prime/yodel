@@ -6,7 +6,6 @@ import glaml.{
 import gleam/dict.{type Dict}
 import gleam/float
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/regex.{type Regex}
 import gleam/string
@@ -59,17 +58,12 @@ fn resolve_property(
   with pattern: Regex,
 ) -> Properties {
   let #(key, value) = property
-  io.debug(value <> " -> " <> regex.split(pattern, value) |> string.join(""))
   case
     regex.split(pattern, value) |> string.join("") |> string.split_once(":")
   {
     Ok(#(var, default)) -> {
-      io.debug("var: " <> var <> ", default: " <> default)
       case envoy.get(var) {
         Ok(resolved) -> {
-          io.debug(
-            "Final: " <> string.replace(value, "${" <> var <> "}", resolved),
-          )
           dict.from_list([
             #(key, string.replace(value, "${" <> var <> "}", resolved)),
           ])
