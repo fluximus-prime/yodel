@@ -10,6 +10,7 @@ import gleam/io
 import gleam/list
 import gleam/regex.{type Regex}
 import gleam/string
+import simplifile
 
 pub type YodelContext {
   YodelContext(props: Properties)
@@ -20,30 +21,18 @@ pub type Properties =
 
 pub type YodelError {
   InvalidPath(error: String)
-  InvalidPattern(error: String)
 }
 
-/// Configuration for Yodel
-pub type Config {
-  Config(
-    /// The path to the configuration file.
-    ///
-    /// Default: `./config/app.yaml`
-    path: String,
-  )
+pub fn load_file(from file_path: String) -> Result(YodelContext, YodelError) {
+  let config = case simplifile.read(file_path) {
+    Ok(content) -> content
+    Error(_) -> "Could not read file"
+  }
+  load_string(config)
 }
 
-/// Set the path to the configuration file.
-pub fn set_path(path: String) -> Config {
-  Config(path: path)
-}
-
-pub fn default_config() -> Config {
-  Config(path: "./config/app.yaml")
-}
-
-pub fn load(config: Config) -> Result(YodelContext, YodelError) {
-  case glaml.parse_file(config.path) {
+pub fn load_string(from config: String) -> Result(YodelContext, YodelError) {
+  case glaml.parse_string(config) {
     Ok(doc) -> {
       glaml.doc_node(doc)
       |> parse_properties
