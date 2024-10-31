@@ -1,8 +1,8 @@
 import glaml
 import yodel/context
 import yodel/errors
-import yodel/parsers/placeholder
-import yodel/parsers/property
+import yodel/parsers/placeholders
+import yodel/parsers/properties
 import yodel/types.{type YodelContext, type YodelError, InvalidContent}
 import yodel/utils
 
@@ -16,8 +16,8 @@ pub fn load_string(from string: String) -> Result(YodelContext, YodelError) {
     Ok(doc) -> {
       let props =
         glaml.doc_node(doc)
-        |> property.parse
-        |> placeholder.resolve
+        |> properties.parse
+        |> placeholders.resolve
 
       case utils.is_valid(props) {
         True -> Ok(context.new(props))
