@@ -29,3 +29,11 @@ pub fn get_float(ctx: YodelContext, key: String) -> Result(Float, Nil) {
 pub fn get_float_or(ctx: YodelContext, key: String, default: Float) -> Float {
   context.get_float_or(ctx, key, default)
 }
+
+pub fn get_bool(ctx: YodelContext, key: String) -> Result(Bool, Nil) {
+  context.get_bool(ctx, key)
+}
+
+pub fn get_bool_or(ctx: YodelContext, key: String, default: Bool) -> Bool {
+  context.get_bool_or(ctx, key, default)
+}

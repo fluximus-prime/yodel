@@ -55,3 +55,18 @@ pub fn get_float_or(ctx: YodelContext, key: String, default: Float) -> Float {
     Error(_) -> default
   }
 }
+
+pub fn get_bool(ctx: YodelContext, key: String) -> Bool {
+  case get_string(ctx, key) {
+    Ok("true") -> True
+    Ok("false") -> False
+    _ -> False
+  }
+}
+
+pub fn get_bool_or(ctx: YodelContext, key: String, default: Bool) -> Bool {
+  case get_bool(ctx, key) {
+    True -> True
+    False -> default
+  }
+}
