@@ -1,3 +1,4 @@
+import envoy
 import startest.{describe, it}
 import startest/expect
 import yodel
@@ -35,6 +36,13 @@ pub fn yodel_tests() {
         yodel.load("fake.yaml")
         |> expect.to_be_error
         Nil
+      }),
+      it("should resolve mustache template placeholder", fn() {
+        envoy.set("example", "foo")
+        let assert Ok(config) = yodel.load("foo.bar: {{example}}-bar")
+        config
+        |> yodel.get_string_or("foo.bar", "error")
+        |> expect.to_equal("foo-bar")
       }),
     ]),
     describe("json tests", [

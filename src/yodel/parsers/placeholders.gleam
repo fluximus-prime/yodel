@@ -1,35 +1,32 @@
 import envoy
+import gleam/bbmustache.{string}
 import gleam/dict
-import gleam/regex.{type Regex}
-import gleam/string
+import gleam/io
 import yodel/types.{type Properties}
 
 pub fn resolve(on props: Properties) -> Properties {
-  let assert Ok(pattern) = regex.from_string("\\$\\{([^}]+)\\}")
   dict.fold(props, dict.new(), fn(acc, key, value) {
-    let resolved = resolve_property(#(key, value), pattern)
+    let resolved = resolve_property(#(key, value))
     dict.merge(acc, resolved)
   })
 }
 
-fn resolve_property(
-  on property: #(String, String),
-  with pattern: Regex,
-) -> Properties {
+fn resolve_property(on property: #(String, String)) -> Properties {
   let #(key, value) = property
-  case
-    regex.split(pattern, value) |> string.join("") |> string.split_once(":")
-  {
-    Ok(#(var, default)) -> {
-      case envoy.get(var) {
-        Ok(resolved) -> {
-          dict.from_list([
-            #(key, string.replace(value, "${" <> var <> "}", resolved)),
-          ])
-        }
-        Error(_) -> dict.from_list([#(key, default)])
-      }
-    }
-    Error(_) -> dict.from_list([#(key, value)])
+  io.debug("Resolving property: " <> key <> " -> " <> value)
+  let rendered = case bbmustache.compile(value) {
+    Ok(template) ->
+      bbmustache.render(template, [
+        #(
+          key,
+          string(case envoy.get(key) {
+            Ok(value) -> value
+            Error(_) -> value
+          }),
+        ),
+      ])
+    Error(_) -> value
   }
+  io.debug("Resolved property: " <> key <> " -> " <> rendered)
+  dict.from_list([#(key, rendered)])
 }
