@@ -7,50 +7,40 @@ import yodel/types.{
 }
 
 pub fn load(from string: String) -> Result(YodelContext, YodelError) {
-  case load_file(string) {
-    Ok(ctx) -> Ok(ctx)
-    Error(_) -> load_string(string)
+  let trimmed = string.trim(string)
+
+  case simplifile.is_file(trimmed) {
+    Ok(True) -> load_file(trimmed)
+    _ -> load_string(trimmed)
   }
 }
 
-fn load_file(string: String) -> Result(YodelContext, YodelError) {
+fn load_file(path: String) -> Result(YodelContext, YodelError) {
   let file_loaders = [yaml.load_file]
-  //[load_json_file, load_yaml_file]
-  let path = string.trim(string)
-  case simplifile.is_file(path) {
-    Ok(_) -> {
-      list.fold(
-        file_loaders,
-        Error(InvalidPath("Error loading config")),
-        fn(acc, loader) {
-          case acc {
-            Ok(ctx) -> Ok(ctx)
-            Error(_) -> loader(path)
-          }
-        },
-      )
-    }
-    _ -> Error(InvalidPath("Error loading config"))
-  }
+
+  list.fold(
+    file_loaders,
+    Error(InvalidPath("Error loading config file")),
+    fn(acc, loader) {
+      case acc {
+        Ok(ctx) -> Ok(ctx)
+        Error(_) -> loader(path)
+      }
+    },
+  )
 }
 
-fn load_string(string: String) -> Result(YodelContext, YodelError) {
+fn load_string(content: String) -> Result(YodelContext, YodelError) {
   let string_loaders = [yaml.load_string]
-  //[load_json_string, load_yaml_string]
-  let config = string.trim(string)
-  case simplifile.is_file(config) {
-    Ok(_) -> Error(InvalidPath("Error loading config"))
-    _ -> {
-      list.fold(
-        string_loaders,
-        Error(InvalidContent("Error loading config")),
-        fn(acc, loader) {
-          case acc {
-            Ok(ctx) -> Ok(ctx)
-            Error(_) -> loader(config)
-          }
-        },
-      )
-    }
-  }
+
+  list.fold(
+    string_loaders,
+    Error(InvalidContent("Invalid config content")),
+    fn(acc, loader) {
+      case acc {
+        Ok(ctx) -> Ok(ctx)
+        Error(_) -> loader(content)
+      }
+    },
+  )
 }
