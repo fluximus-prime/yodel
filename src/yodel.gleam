@@ -16,21 +16,85 @@ pub type YodelContext {
   YodelContext(props: Properties)
 }
 
-pub type Properties =
+type Properties =
   Dict(String, String)
 
 pub type YodelError {
   InvalidPath(error: String)
   InvalidContent(error: String)
+  UnknownConfigType(error: String)
 }
 
-pub fn load_file(from file_path: String) -> Result(YodelContext, YodelError) {
+pub fn load(from string: String) -> Result(YodelContext, YodelError) {
+  case load_file(string) {
+    Ok(ctx) -> Ok(ctx)
+    Error(_) -> load_string(string)
+  }
+}
+
+fn load_file(string: String) -> Result(YodelContext, YodelError) {
+  let file_loaders = [load_json_file, load_yaml_file]
+  let path = string.trim(string)
+  case simplifile.is_file(path) {
+    Ok(_) -> {
+      list.fold(
+        file_loaders,
+        Error(InvalidPath("Error loading config")),
+        fn(acc, loader) {
+          case acc {
+            Ok(ctx) -> Ok(ctx)
+            Error(_) -> loader(path)
+          }
+        },
+      )
+    }
+    _ -> Error(InvalidPath("Error loading config"))
+  }
+}
+
+fn load_string(string: String) -> Result(YodelContext, YodelError) {
+  let string_loaders = [load_json_string, load_yaml_string]
+  let config = string.trim(string)
+  case simplifile.is_file(config) {
+    Ok(_) -> Error(InvalidPath("Error loading config"))
+    _ -> {
+      list.fold(
+        string_loaders,
+        Error(InvalidContent("Error loading config")),
+        fn(acc, loader) {
+          case acc {
+            Ok(ctx) -> Ok(ctx)
+            Error(_) -> loader(config)
+          }
+        },
+      )
+    }
+  }
+}
+
+fn load_json_file(from file_path: String) -> Result(YodelContext, YodelError) {
+  load_yaml_file(file_path)
+}
+
+fn load_json_string(from config: String) -> Result(YodelContext, YodelError) {
+  load_yaml_string(config)
+}
+
+// fn load_toml_file(from file_path: String) -> Result(YodelContext, YodelError) {
+//   todo
+// }
+
+// fn load_toml_string(from config: String) -> Result(YodelContext, YodelError) {
+//   todo
+// }
+
+fn load_yaml_file(from file_path: String) -> Result(YodelContext, YodelError) {
   simplifile.read(file_path)
   |> result.map_error(fn(err) { InvalidPath(err |> file_error_to_string) })
-  |> result.try(load_string)
+  |> result.try(fn(config) { load_yaml_string(config) })
 }
 
-pub fn load_string(from config: String) -> Result(YodelContext, YodelError) {
+fn load_yaml_string(from config: String) -> Result(YodelContext, YodelError) {
   case glaml.parse_string(config) {
     Ok(doc) -> {
       glaml.doc_node(doc)
