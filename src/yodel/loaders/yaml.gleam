@@ -1,22 +1,14 @@
 import glaml
-import gleam/dict
-import gleam/result
-import simplifile
 import yodel/context
 import yodel/errors
+import yodel/parsers/placeholder
 import yodel/parsers/property
-import yodel/parsers/resolver
-import yodel/types.{
-  type Properties, type YodelContext, type YodelError, InvalidContent,
-  InvalidPath,
-}
+import yodel/types.{type YodelContext, type YodelError, InvalidContent}
+import yodel/utils
 
 pub fn load_file(from path: String) -> Result(YodelContext, YodelError) {
-  simplifile.read(path)
-  |> result.map_error(fn(err) {
-    InvalidPath(err |> errors.file_error_to_string)
-  })
-  |> result.try(fn(string) { load_string(string) })
+  use string <- utils.read_file(path)
+  load_string(string)
 }
 
 pub fn load_string(from string: String) -> Result(YodelContext, YodelError) {
@@ -24,10 +16,10 @@ pub fn load_string(from string: String) -> Result(YodelContext, YodelError) {
     Ok(doc) -> {
       let props =
         glaml.doc_node(doc)
-        |> property.parse_properties
-        |> resolver.resolve_properties
+        |> property.parse
+        |> placeholder.resolve
 
-      case is_valid(props) {
+      case utils.is_valid(props) {
         True -> Ok(context.new(props))
         False -> Error(InvalidContent("Invalid config data"))
       }
@@ -35,20 +27,5 @@ pub fn load_string(from string: String) -> Result(YodelContext, YodelError) {
     Error(err) -> {
       Error(InvalidContent(err |> errors.doc_error_to_string))
     }
-  }
-}
-
-fn is_valid(props: Properties) -> Bool {
-  case dict.size(props) {
-    // prevent empty configs
-    0 -> False
-    1 -> {
-      // prevent broken configs
-      case dict.get(props, "") {
-        Ok(_) -> False
-        Error(_) -> True
-      }
-    }
-    _ -> True
   }
 }

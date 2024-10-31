@@ -7,11 +7,11 @@ import gleam/list
 import gleam/string
 import yodel/types.{type Properties}
 
-pub fn parse_properties(node: DocNode) -> Properties {
-  parse(node, "")
+pub fn parse(node: DocNode) -> Properties {
+  parse_properties(node, "")
 }
 
-fn parse(node: DocNode, prefix: String) -> Properties {
+fn parse_properties(node: DocNode, prefix: String) -> Properties {
   case node {
     DocNodeMap(pairs) -> {
       list.fold(pairs, dict.new(), fn(acc, pair) {
@@ -20,7 +20,7 @@ fn parse(node: DocNode, prefix: String) -> Properties {
           "" -> key
           _ -> prefix <> "." <> key
         }
-        let props = parse(pair.1, new_prefix)
+        let props = parse_properties(pair.1, new_prefix)
         dict.merge(acc, props)
       })
     }
@@ -28,7 +28,7 @@ fn parse(node: DocNode, prefix: String) -> Properties {
     DocNodeSeq(items) -> {
       list.index_fold(items, dict.new(), fn(acc, item, index) {
         let new_prefix = prefix <> "[" <> int.to_string(index) <> "]"
-        let props = parse(item, new_prefix)
+        let props = parse_properties(item, new_prefix)
         dict.merge(acc, props)
       })
     }
