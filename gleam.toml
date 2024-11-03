@@ -9,6 +9,10 @@ repository = { type = "github", user = "fluximus-prime", repo = "yodel" }
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"
 glaml = ">= 1.0.1 and < 2.0.0"
 envoy = ">= 1.0.2 and < 2.0.0"
+simplifile = ">= 2.2.0 and < 3.0.0"
+tom = ">= 0.3.0 and < 1.0.0"
+gleam_bbmustache = ">= 2.2.0 and < 3.0.0"
+birl = ">= 1.7.1 and < 2.0.0"
 
 [dev-dependencies]
 startest = ">= 0.5.0 and < 1.0.0"
