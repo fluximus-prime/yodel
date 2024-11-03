@@ -5,41 +5,14 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
-import yodel/context
 import yodel/errors
-import yodel/parsers/placeholders
-import yodel/parsers/properties
-import yodel/types.{
-  type Properties, type YodelContext, type YodelError, InvalidContent,
-}
-import yodel/utils
+import yodel/types.{type Properties, type YodelError, InvalidContent}
 
-pub fn load_file(from path: String) -> Result(YodelContext, YodelError) {
-  use string <- utils.read_file(path)
-  load_string(string)
-}
-
-pub fn load_string(from string: String) -> Result(YodelContext, YodelError) {
+pub fn parse(from string: String) -> Result(Properties, YodelError) {
   case glaml.parse_string(string) {
-    Ok(doc) -> {
-      let props =
-        glaml.doc_node(doc)
-        |> properties.parse(parse)
-        |> placeholders.resolve
-
-      case utils.is_valid(props) {
-        True -> Ok(context.new(props))
-        False -> Error(InvalidContent("Invalid config data"))
-      }
-    }
-    Error(err) -> {
-      Error(InvalidContent(err |> errors.doc_error_to_string))
-    }
+    Ok(doc) -> glaml.doc_node(doc) |> parse_properties("") |> Ok
+    Error(err) -> Error(InvalidContent(err |> errors.doc_error_to_string))
   }
-}
-
-pub fn parse(node: DocNode) -> Properties {
-  parse_properties(node, "")
 }
 
 fn parse_properties(node: DocNode, prefix: String) -> Properties {
