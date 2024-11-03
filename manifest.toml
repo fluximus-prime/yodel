@@ -29,6 +29,7 @@ packages = [
 ]
 
 [requirements]
+birl = { version = ">= 1.7.1 and < 2.0.0" }
 envoy = { version = ">= 1.0.2 and < 2.0.0" }
 glaml = { version = ">= 1.0.1 and < 2.0.0" }
 gleam_bbmustache = { version = ">= 2.2.0 and < 3.0.0" }
