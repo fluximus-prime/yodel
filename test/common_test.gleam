@@ -3,7 +3,7 @@ import startest/expect
 import yodel
 
 pub fn common_tests() {
-  describe("common tests", [
+  describe("common", [
     it("should load basic value", fn() {
       let assert Ok(config) = yodel.load("foo.bar: fooey\n")
       config
