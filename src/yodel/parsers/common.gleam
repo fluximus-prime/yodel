@@ -4,8 +4,8 @@ import gleam/string
 import simplifile
 import yodel/context
 import yodel/errors
-import yodel/loaders/toml
-import yodel/loaders/yaml
+import yodel/parsers/toml
+import yodel/parsers/yaml
 import yodel/resolver
 import yodel/types.{
   type Properties, type YodelContext, type YodelError, InvalidContent,

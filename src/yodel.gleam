@@ -1,5 +1,5 @@
 import yodel/context
-import yodel/loaders/common
+import yodel/parsers/common
 import yodel/types.{type YodelContext, type YodelError}
 
 pub fn load(from string: String) -> Result(YodelContext, YodelError) {
