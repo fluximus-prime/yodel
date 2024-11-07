@@ -37,7 +37,9 @@ fn parse_properties(node: DocNode, prefix: String) -> Properties {
       })
     }
 
-    DocNodeStr(value) -> dict.insert(dict.new(), prefix, value)
+    DocNodeStr(value) -> {
+      dict.insert(dict.new(), prefix, value)
+    }
     DocNodeInt(value) -> dict.insert(dict.new(), prefix, int.to_string(value))
     DocNodeNil -> dict.insert(dict.new(), prefix, "nil")
   }
