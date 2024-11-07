@@ -24,7 +24,8 @@ database:
 features:
   - logging
   - monitoring
-  - "multi-line\nfeature"
+  - "multi-line
+      feature"
 
 nested:
   level1:
