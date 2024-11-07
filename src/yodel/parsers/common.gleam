@@ -3,13 +3,11 @@ import gleam/list
 import gleam/string
 import simplifile
 import yodel/context
-import yodel/errors
 import yodel/parsers/toml
 import yodel/parsers/yaml
 import yodel/resolver
 import yodel/types.{
   type Properties, type YodelContext, type YodelError, InvalidContent,
-  InvalidPath,
 }
 import yodel/utils
 
@@ -30,25 +28,18 @@ pub fn load(from string: String) -> Result(YodelContext, YodelError) {
 
 fn load_file(path: String) -> Result(YodelContext, YodelError) {
   io.debug("Loading file: " <> path)
-  case simplifile.read(path) {
-    Ok(content) -> load_string(content)
-    Error(err) -> Error(InvalidPath(errors.file_error_to_string(err)))
-  }
+  use content <- utils.read_file(path)
+  load_string(content)
 }
 
 fn load_string(content: String) -> Result(YodelContext, YodelError) {
   let parsers = [#("toml", toml.parse), #("yaml/json", yaml.parse)]
 
-  io.debug("Trying to parse config data: " <> content)
-
   case try_parsers(parsers, content) {
     Ok(props) -> {
       case utils.is_valid(props) {
         True -> props |> resolver.resolve_properties |> context.new |> Ok
-        False -> {
-          io.debug("Invalid config data")
-          Error(InvalidContent("Invalid config data"))
-        }
+        False -> Error(InvalidContent("Invalid config data"))
       }
     }
     Error(err) -> Error(err)
