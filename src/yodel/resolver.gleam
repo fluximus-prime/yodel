@@ -13,7 +13,6 @@ pub fn resolve_properties(on props: Properties) -> Properties {
 
 pub fn resolve_property(on property: #(String, String)) -> Properties {
   let #(key, value) = property
-  io.debug("Resolving property: " <> key <> " -> " <> value)
   let rendered = case bbmustache.compile(value) {
     Ok(template) ->
       bbmustache.render(template, [
@@ -27,6 +26,6 @@ pub fn resolve_property(on property: #(String, String)) -> Properties {
       ])
     Error(_) -> value
   }
-  io.debug("Resolved property: " <> key <> " -> " <> rendered)
+  io.debug(key <> " -> " <> rendered)
   dict.from_list([#(key, rendered)])
 }

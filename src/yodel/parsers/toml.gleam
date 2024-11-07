@@ -3,7 +3,6 @@ import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/float
 import gleam/int
-import gleam/io
 import gleam/list
 import tom.{
   type Date, type DateTime, type Time, type Toml, Array, ArrayOfTables, Bool,
@@ -25,7 +24,6 @@ fn parse_properties(doc: Dict(String, Toml), prefix: String) -> Properties {
       "" -> key
       _ -> prefix <> "." <> key
     }
-    io.debug("Parsing property: " <> new_prefix)
     let props = parse_value(value, new_prefix)
     dict.merge(acc, props)
   })
@@ -38,10 +36,7 @@ fn parse_value(value: Toml, prefix: String) -> Properties {
     Infinity(_) -> dict.insert(dict.new(), prefix, "nil")
     Nan(_) -> dict.insert(dict.new(), prefix, "nil")
     Bool(b) -> dict.insert(dict.new(), prefix, bool.to_string(b))
-    String(s) -> {
-      io.debug("Parsing string: " <> s)
-      dict.insert(dict.new(), prefix, s)
-    }
+    String(s) -> dict.insert(dict.new(), prefix, s)
     Date(d) -> dict.insert(dict.new(), prefix, format_date(d))
     Time(t) -> dict.insert(dict.new(), prefix, format_time(t))
     DateTime(dt) -> dict.insert(dict.new(), prefix, format_datetime(dt))
