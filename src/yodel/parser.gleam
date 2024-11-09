@@ -45,7 +45,6 @@ fn parse_content(
   options: ParseOptions,
 ) -> Result(YodelContext, ConfigError) {
   let parsers = [#("toml", toml.parse), #("json/yaml", yaml.parse)]
-
   case try_parsers(parsers, content) {
     Ok(props) -> validate_and_resolve(props, options)
     Error(err) -> Error(err)
@@ -90,15 +89,13 @@ fn try_parsers(
   content: String,
 ) -> Result(Properties, ConfigError) {
   list.fold(parsers, Error(ParseError(UnknownFormat)), fn(acc, parser) {
+    io.debug("Trying parser: " <> parser.0)
     case acc {
       Ok(props) -> {
         io.debug("Parser succeeded, skipping remaining parsers")
         Ok(props)
       }
-      Error(_) -> {
-        io.debug("Trying parser: " <> parser.0)
-        parser.1(content)
-      }
+      Error(_) -> parser.1(content)
     }
   })
 }
