@@ -4,17 +4,20 @@ import gleam/dict.{type Dict}
 import gleam/float
 import gleam/int
 import gleam/list
+import gleam/string
 import tom.{
   type Date, type DateTime, type Time, type Toml, Array, ArrayOfTables, Bool,
   Date, DateTime, Float, Infinity, InlineTable, Int, Nan, String, Table, Time,
 }
-import yodel/errors
-import yodel/types.{type Properties, type YodelError}
+import yodel/types.{
+  type ConfigError, type Properties, InvalidStructure, InvalidSyntax, Location,
+  ParseError, SyntaxError,
+}
 
-pub fn parse(from content: String) -> Result(Properties, YodelError) {
+pub fn parse(from content: String) -> Result(Properties, ConfigError) {
   case tom.parse(content) {
     Ok(doc) -> parse_properties(doc, "") |> Ok
-    Error(err) -> Error(types.InvalidContent(errors.parse_error_to_string(err)))
+    Error(err) -> Error(map_tom_error(err))
   }
 }
 
@@ -95,4 +98,17 @@ fn format_time(time: Time) -> String {
     Ok(t) -> birl.to_time_string(t)
     Error(_) -> s
   }
+}
+
+fn map_tom_error(error: tom.ParseError) -> ConfigError {
+  ParseError(case error {
+    tom.Unexpected(got, expected) ->
+      InvalidSyntax(SyntaxError(
+        format: "Toml",
+        location: Location(0, 0),
+        message: "Expected " <> expected <> ", but got " <> got,
+      ))
+    tom.KeyAlreadyInUse(key) ->
+      InvalidStructure("Key already in use: " <> string.join(key, "."))
+  })
 }

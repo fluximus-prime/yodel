@@ -5,13 +5,15 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
-import yodel/errors
-import yodel/types.{type Properties, type YodelError, InvalidContent}
+import yodel/types.{
+  type ConfigError, type Properties, InvalidSyntax, Location, ParseError,
+  SyntaxError,
+}
 
-pub fn parse(from string: String) -> Result(Properties, YodelError) {
+pub fn parse(from string: String) -> Result(Properties, ConfigError) {
   case glaml.parse_string(string) {
     Ok(doc) -> glaml.doc_node(doc) |> parse_properties("") |> Ok
-    Error(err) -> Error(InvalidContent(err |> errors.doc_error_to_string))
+    Error(err) -> Error(map_glaml_error(err))
   }
 }
 
@@ -51,4 +53,15 @@ fn extract_key(node: DocNode) -> String {
     DocNodeInt(value) -> int.to_string(value)
     _ -> string.inspect(node)
   }
+}
+
+fn map_glaml_error(error: glaml.DocError) -> ConfigError {
+  let glaml.DocError(msg, #(line, col)) = error
+  ParseError(
+    InvalidSyntax(SyntaxError(
+      format: "Json/Yaml",
+      location: Location(line, col),
+      message: msg,
+    )),
+  )
 }

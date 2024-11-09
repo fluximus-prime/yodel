@@ -1,9 +1,9 @@
 import yodel/context
-import yodel/parsers/common
-import yodel/types.{type YodelContext, type YodelError}
+import yodel/parser
+import yodel/types.{type ConfigError, type YodelContext, ParseOptions}
 
-pub fn load(from string: String) -> Result(YodelContext, YodelError) {
-  common.load(string)
+pub fn load(from string: String) -> Result(YodelContext, ConfigError) {
+  parser.parse(string, ParseOptions(resolve: True))
 }
 
 pub fn get_string(ctx: YodelContext, key: String) -> Result(String, Nil) {
