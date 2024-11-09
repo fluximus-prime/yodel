@@ -26,6 +26,14 @@ pub type ConfigError {
 
 pub type GetError {
   KeyNotFound(key: String)
+  TypeError(key: String, expected: GetType, got: String)
+}
+
+pub type GetType {
+  BoolValue
+  FloatValue
+  IntValue
+  StringValue
 }
 
 pub type FileError {
