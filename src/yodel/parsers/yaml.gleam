@@ -1,7 +1,10 @@
 import glaml.{
-  type DocNode, DocNodeInt, DocNodeMap, DocNodeNil, DocNodeSeq, DocNodeStr,
+  type DocNode, DocNodeBool, DocNodeFloat, DocNodeInt, DocNodeMap, DocNodeNil,
+  DocNodeSeq, DocNodeStr,
 }
+import gleam/bool
 import gleam/dict
+import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
@@ -39,10 +42,11 @@ fn parse_properties(node: DocNode, prefix: String) -> Properties {
       })
     }
 
-    DocNodeStr(value) -> {
-      dict.insert(dict.new(), prefix, value)
-    }
+    DocNodeStr(value) -> dict.insert(dict.new(), prefix, value)
+    DocNodeBool(value) -> dict.insert(dict.new(), prefix, bool.to_string(value))
     DocNodeInt(value) -> dict.insert(dict.new(), prefix, int.to_string(value))
+    DocNodeFloat(value) ->
+      dict.insert(dict.new(), prefix, float.to_string(value))
     DocNodeNil -> dict.insert(dict.new(), prefix, "nil")
   }
 }
@@ -51,6 +55,7 @@ fn extract_key(node: DocNode) -> String {
   case node {
     DocNodeStr(value) -> value
     DocNodeInt(value) -> int.to_string(value)
+    DocNodeFloat(value) -> float.to_string(value)
     _ -> string.inspect(node)
   }
 }
