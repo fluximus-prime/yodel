@@ -49,7 +49,7 @@ fn parse_content(
   content: String,
   options: YodelOptions,
 ) -> Result(YodelContext, ConfigError) {
-  case options.format {
+  case cfg.format(options) {
     cfg.Auto -> parse_auto(content)
     cfg.Json -> parse_json(content)
     cfg.Toml -> parse_toml(content)
