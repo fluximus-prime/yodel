@@ -1,54 +1,63 @@
 import startest.{describe, it}
-import startest/expect
+import test_helpers
 import yodel
 
 pub fn json_tests() {
   describe("json", [
-    it("should load simple file", fn() {
-      yodel.load("./test/fixtures/simple.json")
-      |> expect.to_be_ok
-      Nil
+    it("loads simple file", fn() {
+      test_helpers.assert_loads_simple_file(
+        yodel.json,
+        test_helpers.to_string(yodel.json),
+      )
     }),
-    it("should load complex file", fn() {
-      yodel.load("./test/fixtures/complex.json")
-      |> expect.to_be_ok
-      Nil
+    it("loads complex file", fn() {
+      test_helpers.assert_loads_complex_file(
+        yodel.json,
+        test_helpers.to_string(yodel.json),
+      )
     }),
-    it("should not load fake file", fn() {
-      yodel.load("fake.json")
-      |> expect.to_be_error
-      Nil
+    it("does not load fake file", fn() {
+      test_helpers.assert_does_not_load_fake_file(
+        yodel.json,
+        test_helpers.to_string(yodel.json),
+      )
     }),
-    it("should parse basic value", fn() {
-      "
-      {
-        \"foo\": {
-          \"bar\": \"fooey\"
-        }
-      }
-      "
-      |> yodel.load
-      |> expect.to_be_ok
-      |> yodel.get_string_or("foo.bar", "error")
-      |> expect.to_equal("fooey")
-    }),
-    it("should parse array", fn() {
-      "
-      {
-        \"foo\": [
+    it("parses basic value", fn() {
+      let content =
+        "
           {
-            \"bar\": \"fooey\"
-          },
-          {
-            \"baz\": \"fooed\"
+            \"foo\": {
+              \"bar\": \"fooey\"
+            }
           }
-        ]
-      }
-      "
-      |> yodel.load
-      |> expect.to_be_ok
-      |> yodel.get_string_or("foo[1].baz", "error")
-      |> expect.to_equal("fooed")
+        "
+      test_helpers.assert_parses_basic_value(
+        yodel.json,
+        content,
+        "foo.bar",
+        "fooey",
+      )
+    }),
+    it("parses array", fn() {
+      let content =
+        "
+          {
+            \"foo\": [
+              {
+                \"bar\": \"fooey\"
+              },
+              {
+                \"baz\": \"fooed\"
+              }
+            ]
+          }
+        "
+      test_helpers.assert_parses_array(
+        yodel.json,
+        content,
+        "foo[1].baz",
+        "fooed",
+      )
     }),
   ])
 }

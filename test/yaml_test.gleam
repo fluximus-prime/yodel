@@ -1,56 +1,57 @@
 import startest.{describe, it}
-import startest/expect
+import test_helpers
 import yodel
 
 pub fn yaml_tests() {
   describe("yaml", [
-    it("should load simple file as yaml", fn() {
-      yodel.default_options()
-      |> yodel.with_format(yodel.yaml)
-      |> yodel.load_with_options("./test/fixtures/simple.yaml")
-      |> expect.to_be_ok
-      Nil
+    it("loads simple file", fn() {
+      test_helpers.assert_loads_complex_file(
+        yodel.yaml,
+        test_helpers.to_string(yodel.yaml),
+      )
     }),
-    it("should load simple file", fn() {
-      yodel.load("./test/fixtures/simple.yaml")
-      |> expect.to_be_ok
-      Nil
+    it("loads complex file", fn() {
+      test_helpers.assert_loads_complex_file(
+        yodel.yaml,
+        test_helpers.to_string(yodel.yaml),
+      )
     }),
-    it("should load complex file", fn() {
-      yodel.load("./test/fixtures/complex.yaml")
-      |> expect.to_be_ok
-      Nil
+    it("does not load fake file", fn() {
+      test_helpers.assert_does_not_load_fake_file(
+        yodel.yaml,
+        test_helpers.to_string(yodel.yaml),
+      )
     }),
-    it("should not load fake file", fn() {
-      yodel.load("fake.yaml")
-      |> expect.to_be_error
-      Nil
+    it("loads simple string", fn() {
+      let content = "foo.bar: fooey"
+      test_helpers.assert_loads_simple_string(yodel.yaml, content)
     }),
-    it("should load simple string", fn() {
-      yodel.load("foo.bar: fooey")
-      |> expect.to_be_ok
-      Nil
+    it("parses basic value", fn() {
+      let content =
+        "
+          foo:
+            bar: fooey
+        "
+      test_helpers.assert_parses_basic_value(
+        yodel.yaml,
+        content,
+        "foo.bar",
+        "fooey",
+      )
     }),
-    it("should parse basic value", fn() {
-      "
-      foo:
-        bar: fooey
-      "
-      |> yodel.load
-      |> expect.to_be_ok
-      |> yodel.get_string_or("foo.bar", "error")
-      |> expect.to_equal("fooey")
-    }),
-    it("should parse array", fn() {
-      "
-      foo:
-        - bar: fooey
-        - baz: fooed
-      "
-      |> yodel.load
-      |> expect.to_be_ok
-      |> yodel.get_string_or("foo[1].baz", "error")
-      |> expect.to_equal("fooed")
+    it("parses array", fn() {
+      let content =
+        "
+          foo:
+            - bar: fooey
+            - baz: fooed
+        "
+      test_helpers.assert_parses_array(
+        yodel.yaml,
+        content,
+        "foo[1].baz",
+        "fooed",
+      )
     }),
   ])
 }

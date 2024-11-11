@@ -1,51 +1,59 @@
 import startest.{describe, it}
-import startest/expect
+import test_helpers
 import yodel
 
 pub fn toml_tests() {
   describe("toml", [
-    it("should load simple file", fn() {
-      yodel.load("./test/fixtures/simple.toml")
-      |> expect.to_be_ok
-      Nil
+    it("loads simple file", fn() {
+      test_helpers.assert_loads_simple_file(
+        yodel.toml,
+        test_helpers.to_string(yodel.toml),
+      )
     }),
-    it("should load complex file", fn() {
-      yodel.load("./test/fixtures/complex.toml")
-      |> expect.to_be_ok
-      Nil
+    it("loads complex file", fn() {
+      test_helpers.assert_loads_complex_file(
+        yodel.toml,
+        test_helpers.to_string(yodel.toml),
+      )
     }),
-    it("should not load fake file", fn() {
-      yodel.load("fake.toml")
-      |> expect.to_be_error
-      Nil
+    it("does not load fake file", fn() {
+      test_helpers.assert_does_not_load_fake_file(
+        yodel.toml,
+        test_helpers.to_string(yodel.toml),
+      )
     }),
-    it("should load simple string", fn() {
-      yodel.load("foo.bar = \"fooey\"")
-      |> expect.to_be_ok
-      Nil
+    it("loads simple string", fn() {
+      let content = "foo.bar = \"fooey\""
+      test_helpers.assert_loads_simple_string(yodel.toml, content)
     }),
-    it("should parse basic value", fn() {
-      "
-      [foo]
-      bar = \"fooey\"
-      "
-      |> yodel.load
-      |> expect.to_be_ok
-      |> yodel.get_string_or("foo.bar", "error")
-      |> expect.to_equal("fooey")
+    it("parses basic value", fn() {
+      let content =
+        "
+          [foo]
+          bar = \"fooey\"
+        "
+      test_helpers.assert_parses_basic_value(
+        yodel.toml,
+        content,
+        "foo.bar",
+        "fooey",
+      )
     }),
-    it("should parse array", fn() {
-      "
-      [[foo]]
-      bar = \"fooey\"
+    it("parses array", fn() {
+      let content =
+        "
+          [[foo]]
+          bar = \"fooey\"
 
-      [[foo]]
-      baz = \"fooed\"
-      "
-      |> yodel.load
-      |> expect.to_be_ok
-      |> yodel.get_string_or("foo[1].baz", "error")
-      |> expect.to_equal("fooed")
+          [[foo]]
+          baz = \"fooed\"
+        "
+      test_helpers.assert_parses_array(
+        yodel.toml,
+        content,
+        "foo[1].baz",
+        "fooed",
+      )
     }),
   ])
 }
