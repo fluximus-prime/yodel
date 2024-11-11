@@ -4,6 +4,13 @@ import yodel
 
 pub fn yaml_tests() {
   describe("yaml", [
+    it("should load simple file as yaml", fn() {
+      yodel.default_options()
+      |> yodel.with_format(yodel.yaml)
+      |> yodel.load_with_options("./test/fixtures/simple.yaml")
+      |> expect.to_be_ok
+      Nil
+    }),
     it("should load simple file", fn() {
       yodel.load("./test/fixtures/simple.yaml")
       |> expect.to_be_ok

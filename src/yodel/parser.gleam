@@ -5,19 +5,24 @@ import gleam/result
 import gleam/string
 import simplifile
 import yodel/context
+import yodel/options.{type YodelOptions} as cfg
 import yodel/parsers/toml
 import yodel/parsers/yaml
 import yodel/resolver
 import yodel/types.{
-  type ConfigError, type InputType, type ParseOptions, type Properties,
-  type YodelContext, Content, EmptyConfig, File, FileError, FileNotFound,
+  type ConfigError, type InputType, type Properties, type YodelContext,
+  type YodelParser, Content, EmptyConfig, File, FileError, FileNotFound,
   FilePermissionDenied, FileReadError, InvalidConfig, ParseError, UnknownFormat,
-  ValidationError,
+  ValidationError, YodelParser,
 }
+
+const parsers = [
+  YodelParser("toml", toml.parse), YodelParser("json/yaml", yaml.parse),
+]
 
 pub fn parse(
   from input: String,
-  with options: ParseOptions,
+  with options: YodelOptions,
 ) -> Result(YodelContext, ConfigError) {
   case detect_input_type(input) {
     File(path) -> parse_file(path, options)
@@ -34,7 +39,7 @@ fn detect_input_type(input: String) -> InputType {
 
 fn parse_file(
   path: String,
-  options: ParseOptions,
+  options: YodelOptions,
 ) -> Result(YodelContext, ConfigError) {
   use content <- read_file(path)
   parse_content(content, options)
@@ -42,22 +47,40 @@ fn parse_file(
 
 fn parse_content(
   content: String,
-  options: ParseOptions,
+  options: YodelOptions,
 ) -> Result(YodelContext, ConfigError) {
-  let parsers = [#("toml", toml.parse), #("json/yaml", yaml.parse)]
-  case try_parsers(parsers, content) {
-    Ok(props) -> validate_and_resolve(props, options)
-    Error(err) -> Error(err)
+  case options.format {
+    cfg.Auto -> parse_auto(content)
+    cfg.Json -> parse_json(content)
+    cfg.Toml -> parse_toml(content)
+    cfg.Yaml -> parse_yaml(content)
   }
+  |> result.then(fn(props) { validate_and_resolve(props, options) })
+}
+
+fn parse_auto(content: String) -> Result(Properties, ConfigError) {
+  try_parsers(parsers, content)
+}
+
+fn parse_json(content: String) -> Result(Properties, ConfigError) {
+  yaml.parse(content)
+}
+
+fn parse_toml(content: String) -> Result(Properties, ConfigError) {
+  toml.parse(content)
+}
+
+fn parse_yaml(content: String) -> Result(Properties, ConfigError) {
+  yaml.parse(content)
 }
 
 fn validate_and_resolve(
   props: Properties,
-  options: ParseOptions,
+  options: YodelOptions,
 ) -> Result(YodelContext, ConfigError) {
   case validate(props) {
     Ok(validated) -> {
-      case options.resolve {
+      case cfg.resolve(options) {
         True -> validated |> resolve |> context.new |> Ok
         False -> validated |> context.new |> Ok
       }
@@ -85,17 +108,17 @@ fn resolve(props: Properties) -> Properties {
 }
 
 fn try_parsers(
-  parsers: List(#(String, fn(String) -> Result(Properties, ConfigError))),
+  parsers: List(YodelParser),
   content: String,
 ) -> Result(Properties, ConfigError) {
   list.fold(parsers, Error(ParseError(UnknownFormat)), fn(acc, parser) {
-    io.debug("Trying parser: " <> parser.0)
+    io.debug("Trying parser: " <> parser.name)
     case acc {
       Ok(props) -> {
         io.debug("Parser succeeded, skipping remaining parsers")
         Ok(props)
       }
-      Error(_) -> parser.1(content)
+      Error(_) -> parser.parse(content)
     }
   })
 }
