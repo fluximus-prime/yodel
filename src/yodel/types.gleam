@@ -1,4 +1,5 @@
 import gleam/dict.{type Dict}
+import yodel/options.{type Format}
 
 pub type Properties =
   Dict(String, String)
@@ -10,11 +11,12 @@ pub type YodelContext {
 pub type YodelParser {
   YodelParser(
     name: String,
+    detect: fn(Input) -> Format,
     parse: fn(String) -> Result(Properties, ConfigError),
   )
 }
 
-pub type InputType {
+pub type Input {
   File(path: String)
   Content(content: String)
 }

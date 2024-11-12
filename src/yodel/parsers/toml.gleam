@@ -9,9 +9,41 @@ import tom.{
   type Date, type DateTime, type Time, type Toml, Array, ArrayOfTables, Bool,
   Date, DateTime, Float, Infinity, InlineTable, Int, Nan, String, Table, Time,
 }
+import yodel/options.{type Format, Auto, Toml}
 import yodel/types.{
-  type ConfigError, type Properties, InvalidStructure, InvalidSyntax, Location,
-  ParseError, SyntaxError,
+  type ConfigError, type Input, type Properties, Content, File, InvalidStructure,
+  InvalidSyntax, Location, ParseError, SyntaxError,
+}
+import yodel/utils
+
+const known_extensions = ["toml", "tml"]
+
+pub fn detect(input: Input) -> Format {
+  case input {
+    File(path) -> detect_format_from_path(path)
+    Content(content) -> detect_format_from_content(content)
+  }
+}
+
+fn detect_format_from_path(path: String) -> Format {
+  let ext = utils.get_extension_from_path(path)
+  case list.contains(known_extensions, ext) {
+    True -> options.Toml
+    False -> Auto
+  }
+}
+
+fn detect_format_from_content(content: String) -> Format {
+  let trimmed = string.trim(content)
+  case
+    string.contains(trimmed, "[")
+    && string.contains(trimmed, "]")
+    && string.contains(trimmed, "=")
+    && !string.starts_with(trimmed, "---")
+  {
+    True -> options.Toml
+    False -> Auto
+  }
 }
 
 pub fn parse(from content: String) -> Result(Properties, ConfigError) {

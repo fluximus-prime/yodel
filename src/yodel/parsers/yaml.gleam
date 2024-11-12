@@ -8,9 +8,63 @@ import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
+import yodel/options.{type Format, Auto, Json, Yaml}
 import yodel/types.{
-  type ConfigError, type Properties, InvalidSyntax, Location, ParseError,
-  SyntaxError,
+  type ConfigError, type Input, type Properties, Content, File, InvalidSyntax,
+  Location, ParseError, SyntaxError,
+}
+import yodel/utils
+
+const known_extensions = [
+  #("json", ["json", "jsn", "json5", "jsonc"]), #("yaml", ["yaml", "yml"]),
+]
+
+pub fn detect(input: Input) -> Format {
+  case input {
+    File(path) -> detect_format_from_path(path)
+    Content(content) -> detect_format_from_content(content)
+  }
+}
+
+fn detect_format_from_path(path: String) -> Format {
+  let ext = utils.get_extension_from_path(path)
+  case
+    list.find(known_extensions, fn(entry) {
+      let #(_, exts) = entry
+      list.contains(exts, ext)
+    })
+  {
+    Ok(#("json", _)) -> Json
+    Ok(#("yaml", _)) -> Yaml
+    _ -> Auto
+  }
+}
+
+fn detect_format_from_content(content: String) -> Format {
+  let trimmed = string.trim(content)
+  case detect_json(trimmed) {
+    True -> options.Json
+    False ->
+      case detect_yaml(trimmed) {
+        True -> options.Yaml
+        False -> Auto
+      }
+  }
+}
+
+fn detect_json(content: String) -> Bool {
+  { string.starts_with(content, "{") || string.starts_with(content, "[") }
+  && { string.ends_with(content, "}") || string.ends_with(content, "]") }
+  && string.contains(content, ":")
+}
+
+fn detect_yaml(content: String) -> Bool {
+  {
+    string.starts_with(content, "---")
+    || string.contains(content, ":")
+    || string.contains(content, "- ")
+  }
+  && { !string.starts_with(content, "{") && !string.starts_with(content, "[") }
 }
 
 pub fn parse(from string: String) -> Result(Properties, ConfigError) {

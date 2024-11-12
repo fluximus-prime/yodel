@@ -5,57 +5,69 @@ import gleam/result
 import gleam/string
 import simplifile
 import yodel/context
-import yodel/options.{type YodelOptions} as cfg
+import yodel/options.{type Format, type YodelOptions, Auto, Json, Toml, Yaml} as cfg
 import yodel/parsers/toml
 import yodel/parsers/yaml
 import yodel/resolver
 import yodel/types.{
-  type ConfigError, type InputType, type Properties, type YodelContext,
-  type YodelParser, Content, EmptyConfig, File, FileError, FileNotFound,
-  FilePermissionDenied, FileReadError, InvalidConfig, ParseError, UnknownFormat,
-  ValidationError, YodelParser,
+  type ConfigError, type Input, type Properties, type YodelContext,
+  type YodelParser, Content, EmptyConfig, File, InvalidConfig, ParseError,
+  UnknownFormat, ValidationError, YodelParser,
 }
+import yodel/utils
 
 const parsers = [
-  YodelParser("toml", toml.parse), YodelParser("json/yaml", yaml.parse),
+  YodelParser("toml", toml.detect, toml.parse),
+  YodelParser("json/yaml", yaml.detect, yaml.parse),
 ]
 
 pub fn parse(
   from input: String,
   with options: YodelOptions,
 ) -> Result(YodelContext, ConfigError) {
-  case detect_input_type(input) {
-    File(path) -> parse_file(path, options)
-    Content(content) -> parse_content(content, options)
-  }
+  use content <- get_content(input)
+  use props <- parse_content(content)
+  validate_and_resolve(props, options)
 }
 
-fn detect_input_type(input: String) -> InputType {
+fn detect_input(input: String) -> Input {
   case string.trim(input) |> simplifile.is_file {
     Ok(True) -> File(input)
     _ -> Content(input)
   }
 }
 
-fn parse_file(
-  path: String,
-  options: YodelOptions,
+fn detect_format(input: Input) -> Format {
+  list.fold(parsers, cfg.Auto, fn(acc, parser) {
+    case acc {
+      cfg.Auto -> parser.detect(input)
+      _ -> acc
+    }
+  })
+}
+
+fn get_content(
+  input: String,
+  handler: fn(String) -> Result(YodelContext, ConfigError),
 ) -> Result(YodelContext, ConfigError) {
-  use content <- read_file(path)
-  parse_content(content, options)
+  case input |> detect_input {
+    File(path) -> utils.read_file(path)
+    Content(content) -> Ok(content)
+  }
+  |> result.then(handler)
 }
 
 fn parse_content(
   content: String,
-  options: YodelOptions,
+  handler: fn(Properties) -> Result(YodelContext, ConfigError),
 ) -> Result(YodelContext, ConfigError) {
-  case cfg.format(options) {
-    cfg.Auto -> parse_auto(content)
-    cfg.Json -> parse_json(content)
-    cfg.Toml -> parse_toml(content)
-    cfg.Yaml -> parse_yaml(content)
+  case content |> detect_input |> detect_format {
+    Auto -> parse_auto(content)
+    Json -> parse_json(content)
+    Toml -> parse_toml(content)
+    Yaml -> parse_yaml(content)
   }
-  |> result.then(fn(props) { validate_and_resolve(props, options) })
+  |> result.then(handler)
 }
 
 fn parse_auto(content: String) -> Result(Properties, ConfigError) {
@@ -63,6 +75,7 @@ fn parse_auto(content: String) -> Result(Properties, ConfigError) {
 }
 
 fn parse_json(content: String) -> Result(Properties, ConfigError) {
+  // the yaml parser also handles json
   yaml.parse(content)
 }
 
@@ -120,22 +133,5 @@ fn try_parsers(
       }
       Error(_) -> parser.parse(content)
     }
-  })
-}
-
-fn read_file(
-  from path: String,
-  then handler: fn(String) -> Result(YodelContext, ConfigError),
-) -> Result(YodelContext, ConfigError) {
-  simplifile.read(path)
-  |> result.map_error(fn(err) { map_simplifile_error(err) })
-  |> result.then(handler)
-}
-
-fn map_simplifile_error(error: simplifile.FileError) -> ConfigError {
-  FileError(case error {
-    simplifile.Eacces -> FilePermissionDenied(simplifile.describe_error(error))
-    simplifile.Enoent -> FileNotFound(simplifile.describe_error(error))
-    _ -> FileReadError(simplifile.describe_error(error))
   })
 }
