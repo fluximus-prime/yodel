@@ -57,8 +57,8 @@ pub fn get_bool_or(ctx: YodelContext, key: String, default: Bool) -> Bool {
   context.get_bool_or(ctx, key, default)
 }
 
-pub fn options(format: Format, resolve: Bool) -> YodelOptions {
-  cfg.new(format:, resolve:)
+pub fn options(format: Format, resolve: Bool, validate: Bool) -> YodelOptions {
+  cfg.new(format:, resolve:, validate:)
 }
 
 pub fn default_options() -> YodelOptions {
@@ -79,10 +79,21 @@ pub fn with_resolve(
   cfg.with_resolve(options:, resolve:)
 }
 
+pub fn with_validate(
+  options options: YodelOptions,
+  validate validate: Bool,
+) -> YodelOptions {
+  cfg.with_validate(options:, validate:)
+}
+
 pub fn format(options options: YodelOptions) -> Format {
   cfg.format(options)
 }
 
 pub fn resolve(options options: YodelOptions) -> Bool {
   cfg.resolve(options)
+}
+
+pub fn validate(options options: YodelOptions) -> Bool {
+  cfg.validate(options)
 }

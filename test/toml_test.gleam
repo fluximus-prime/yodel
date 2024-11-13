@@ -29,8 +29,8 @@ pub fn toml_tests() {
     it("parses basic value", fn() {
       let content =
         "
-          [foo]
-          bar = \"fooey\"
+        [foo]
+        bar = \"fooey\"
         "
       test_helpers.assert_parses_basic_value(
         yodel.toml,
@@ -42,11 +42,11 @@ pub fn toml_tests() {
     it("parses array", fn() {
       let content =
         "
-          [[foo]]
-          bar = \"fooey\"
+        [[foo]]
+        bar = \"fooey\"
 
-          [[foo]]
-          baz = \"fooed\"
+        [[foo]]
+        baz = \"fooed\"
         "
       test_helpers.assert_parses_array(
         yodel.toml,

@@ -1,17 +1,17 @@
 import envoy
 import gleam/bbmustache.{string}
 import gleam/dict
-import gleam/io
-import yodel/types.{type Properties}
+import yodel/types.{type ConfigError, type Properties}
 
-pub fn resolve_properties(on props: Properties) -> Properties {
+pub fn properties(on props: Properties) -> Result(Properties, ConfigError) {
   dict.fold(props, dict.new(), fn(acc, key, value) {
-    let resolved = resolve_property(#(key, value))
+    let resolved = property(#(key, value))
     dict.merge(acc, resolved)
   })
+  |> Ok
 }
 
-pub fn resolve_property(on property: #(String, String)) -> Properties {
+pub fn property(on property: #(String, String)) -> Properties {
   let #(key, value) = property
   let rendered = case bbmustache.compile(value) {
     Ok(template) ->
@@ -26,6 +26,5 @@ pub fn resolve_property(on property: #(String, String)) -> Properties {
       ])
     Error(_) -> value
   }
-  io.debug(key <> " -> " <> rendered)
   dict.from_list([#(key, rendered)])
 }

@@ -21,8 +21,12 @@ const known_extensions = [
 
 pub fn detect(input: Input) -> Format {
   case input {
-    File(path) -> detect_format_from_path(path)
-    Content(content) -> detect_format_from_content(content)
+    File(path) -> {
+      detect_format_from_path(path)
+    }
+    Content(content) -> {
+      detect_format_from_content(content)
+    }
   }
 }
 
@@ -36,7 +40,9 @@ fn detect_format_from_path(path: String) -> Format {
   {
     Ok(#("json", _)) -> Json
     Ok(#("yaml", _)) -> Yaml
-    _ -> Auto
+    _ -> {
+      Auto
+    }
   }
 }
 
@@ -47,7 +53,9 @@ fn detect_format_from_content(content: String) -> Format {
     False ->
       case detect_yaml(trimmed) {
         True -> options.Yaml
-        False -> Auto
+        False -> {
+          Auto
+        }
       }
   }
 }

@@ -1,3 +1,4 @@
+import gleam/list
 import gleam/result
 import gleam/string
 import simplifile
@@ -6,8 +7,10 @@ import yodel/types.{
 }
 
 pub fn get_extension_from_path(path: String) -> String {
-  case path |> string.trim |> string.lowercase |> string.split(".") {
-    [_, ext] -> string.lowercase(ext)
+  case
+    path |> string.trim |> string.lowercase |> string.split(".") |> list.last
+  {
+    Ok(ext) -> string.lowercase(ext)
     _ -> ""
   }
 }

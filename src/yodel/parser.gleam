@@ -1,5 +1,3 @@
-import gleam/dict
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -8,13 +6,13 @@ import yodel/context
 import yodel/options.{type Format, type YodelOptions, Auto, Json, Toml, Yaml} as cfg
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/resolver
+import yodel/resolve
 import yodel/types.{
   type ConfigError, type Input, type Properties, type YodelContext,
-  type YodelParser, Content, EmptyConfig, File, InvalidConfig, ParseError,
-  UnknownFormat, ValidationError, YodelParser,
+  type YodelParser, Content, File, ParseError, UnknownFormat, YodelParser,
 }
 import yodel/utils
+import yodel/validate
 
 const parsers = [
   YodelParser("toml", toml.detect, toml.parse),
@@ -25,9 +23,35 @@ pub fn parse(
   from input: String,
   with options: YodelOptions,
 ) -> Result(YodelContext, ConfigError) {
+  use props <- parse_input(input)
+  use valid <- validate(props, options)
+  use resolved <- resolve(valid, options)
+  resolved |> context.new |> Ok
+}
+
+fn parse_input(
+  input: String,
+  handler: fn(Properties) -> Result(YodelContext, ConfigError),
+) -> Result(YodelContext, ConfigError) {
   use content <- get_content(input)
-  use props <- parse_content(content)
-  validate_and_resolve(props, options)
+  case input |> detect_input |> detect_format {
+    Auto -> parse_auto(content)
+    Json -> parse_json(content)
+    Toml -> parse_toml(content)
+    Yaml -> parse_yaml(content)
+  }
+  |> result.then(handler)
+}
+
+fn get_content(
+  input: String,
+  handler: fn(String) -> Result(YodelContext, ConfigError),
+) -> Result(YodelContext, ConfigError) {
+  case input |> detect_input {
+    File(path) -> utils.read_file(path)
+    Content(content) -> Ok(content)
+  }
+  |> result.then(handler)
 }
 
 fn detect_input(input: String) -> Input {
@@ -44,30 +68,6 @@ fn detect_format(input: Input) -> Format {
       _ -> acc
     }
   })
-}
-
-fn get_content(
-  input: String,
-  handler: fn(String) -> Result(YodelContext, ConfigError),
-) -> Result(YodelContext, ConfigError) {
-  case input |> detect_input {
-    File(path) -> utils.read_file(path)
-    Content(content) -> Ok(content)
-  }
-  |> result.then(handler)
-}
-
-fn parse_content(
-  content: String,
-  handler: fn(Properties) -> Result(YodelContext, ConfigError),
-) -> Result(YodelContext, ConfigError) {
-  case content |> detect_input |> detect_format {
-    Auto -> parse_auto(content)
-    Json -> parse_json(content)
-    Toml -> parse_toml(content)
-    Yaml -> parse_yaml(content)
-  }
-  |> result.then(handler)
 }
 
 fn parse_auto(content: String) -> Result(Properties, ConfigError) {
@@ -87,37 +87,28 @@ fn parse_yaml(content: String) -> Result(Properties, ConfigError) {
   yaml.parse(content)
 }
 
-fn validate_and_resolve(
+fn validate(
   props: Properties,
   options: YodelOptions,
+  handler: fn(Properties) -> Result(YodelContext, ConfigError),
 ) -> Result(YodelContext, ConfigError) {
-  case validate(props) {
-    Ok(validated) -> {
-      case cfg.resolve(options) {
-        True -> validated |> resolve |> context.new |> Ok
-        False -> validated |> context.new |> Ok
-      }
-    }
-    Error(err) -> Error(err)
+  case cfg.validate(options) {
+    True -> validate.properties(props)
+    False -> props |> Ok
   }
+  |> result.then(handler)
 }
 
-fn validate(props: Properties) -> Result(Properties, ConfigError) {
-  case dict.size(props) {
-    0 -> EmptyConfig |> ValidationError |> Error
-    1 -> {
-      case dict.get(props, "") {
-        Ok(_) ->
-          InvalidConfig("Invalid config content") |> ValidationError |> Error
-        Error(_) -> props |> Ok
-      }
-    }
-    _ -> props |> Ok
+fn resolve(
+  props: Properties,
+  options: YodelOptions,
+  handler: fn(Properties) -> Result(YodelContext, ConfigError),
+) -> Result(YodelContext, ConfigError) {
+  case cfg.resolve(options) {
+    True -> resolve.properties(props)
+    False -> props |> Ok
   }
-}
-
-fn resolve(props: Properties) -> Properties {
-  resolver.resolve_properties(props)
+  |> result.then(handler)
 }
 
 fn try_parsers(
@@ -125,10 +116,8 @@ fn try_parsers(
   content: String,
 ) -> Result(Properties, ConfigError) {
   list.fold(parsers, Error(ParseError(UnknownFormat)), fn(acc, parser) {
-    io.debug("Trying parser: " <> parser.name)
     case acc {
       Ok(props) -> {
-        io.debug("Parser succeeded, skipping remaining parsers")
         Ok(props)
       }
       Error(_) -> parser.parse(content)
