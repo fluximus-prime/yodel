@@ -22,6 +22,12 @@ pub fn json_tests() {
         test_helpers.to_string(yodel.json),
       )
     }),
+    it("loads file with no extension", fn() {
+      test_helpers.assert_loads_file_with_no_extension(
+        yodel.json,
+        test_helpers.to_string(yodel.json),
+      )
+    }),
     it("parses basic value", fn() {
       let content =
         "

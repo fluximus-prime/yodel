@@ -26,6 +26,14 @@ pub fn assert_does_not_load_fake_file(format: Format, extension: String) {
   Nil
 }
 
+pub fn assert_loads_file_with_no_extension(format: Format, extension: String) {
+  yodel.default_options()
+  |> yodel.with_format(format)
+  |> yodel.load_with_options("./test/fixtures/no-ext-" <> extension)
+  |> expect.to_be_ok
+  Nil
+}
+
 pub fn assert_loads_simple_string(format: Format, content: String) {
   yodel.default_options()
   |> yodel.with_format(format)

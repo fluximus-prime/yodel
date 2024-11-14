@@ -22,6 +22,12 @@ pub fn yaml_tests() {
         test_helpers.to_string(yodel.yaml),
       )
     }),
+    it("loads file with no extension", fn() {
+      test_helpers.assert_loads_file_with_no_extension(
+        yodel.yaml,
+        test_helpers.to_string(yodel.yaml),
+      )
+    }),
     it("loads simple string", fn() {
       let content = "foo.bar: fooey"
       test_helpers.assert_loads_simple_string(yodel.yaml, content)
