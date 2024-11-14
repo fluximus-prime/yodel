@@ -9,6 +9,7 @@ import gleam/int
 import gleam/list
 import gleam/string
 import yodel/options.{type Format, Auto, Json, Yaml}
+import yodel/path.{type Path}
 import yodel/types.{
   type ConfigError, type Input, type Properties, Content, File, InvalidSyntax,
   Location, ParseError, SyntaxError,
@@ -77,39 +78,38 @@ fn detect_yaml(content: String) -> Bool {
 
 pub fn parse(from string: String) -> Result(Properties, ConfigError) {
   case glaml.parse_string(string) {
-    Ok(doc) -> glaml.doc_node(doc) |> parse_properties("") |> Ok
+    Ok(doc) -> glaml.doc_node(doc) |> parse_properties(path.new()) |> Ok
     Error(err) -> Error(map_glaml_error(err))
   }
 }
 
-fn parse_properties(node: DocNode, prefix: String) -> Properties {
+fn parse_properties(node: DocNode, path: Path) -> Properties {
   case node {
     DocNodeMap(pairs) -> {
       list.fold(pairs, dict.new(), fn(acc, pair) {
         let key = extract_key(pair.0)
-        let new_prefix = case prefix {
-          "" -> key
-          _ -> prefix <> "." <> key
-        }
-        let props = parse_properties(pair.1, new_prefix)
+        let path = path |> path.segment(key)
+        let props = parse_properties(pair.1, path)
         dict.merge(acc, props)
       })
     }
 
     DocNodeSeq(items) -> {
       list.index_fold(items, dict.new(), fn(acc, item, index) {
-        let new_prefix = prefix <> "[" <> int.to_string(index) <> "]"
-        let props = parse_properties(item, new_prefix)
+        let path = path |> path.index(index)
+        let props = parse_properties(item, path)
         dict.merge(acc, props)
       })
     }
 
-    DocNodeStr(value) -> dict.insert(dict.new(), prefix, value)
-    DocNodeBool(value) -> dict.insert(dict.new(), prefix, bool.to_string(value))
-    DocNodeInt(value) -> dict.insert(dict.new(), prefix, int.to_string(value))
+    DocNodeStr(value) -> dict.insert(dict.new(), path.format(path), value)
+    DocNodeBool(value) ->
+      dict.insert(dict.new(), path.format(path), bool.to_string(value))
+    DocNodeInt(value) ->
+      dict.insert(dict.new(), path.format(path), int.to_string(value))
     DocNodeFloat(value) ->
-      dict.insert(dict.new(), prefix, float.to_string(value))
-    DocNodeNil -> dict.insert(dict.new(), prefix, "nil")
+      dict.insert(dict.new(), path.format(path), float.to_string(value))
+    DocNodeNil -> dict.insert(dict.new(), path.format(path), "nil")
   }
 }
 

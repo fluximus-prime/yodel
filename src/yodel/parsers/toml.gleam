@@ -10,6 +10,7 @@ import tom.{
   Date, DateTime, Float, Infinity, InlineTable, Int, Nan, String, Table, Time,
 }
 import yodel/options.{type Format, Auto, Toml}
+import yodel/path.{type Path}
 import yodel/types.{
   type ConfigError, type Input, type Properties, Content, File, InvalidStructure,
   InvalidSyntax, Location, ParseError, SyntaxError,
@@ -48,49 +49,47 @@ fn detect_format_from_content(content: String) -> Format {
 
 pub fn parse(from content: String) -> Result(Properties, ConfigError) {
   case tom.parse(content) {
-    Ok(doc) -> parse_properties(doc, "") |> Ok
+    Ok(doc) -> parse_properties(doc, path.new()) |> Ok
     Error(err) -> Error(map_tom_error(err))
   }
 }
 
-fn parse_properties(doc: Dict(String, Toml), prefix: String) -> Properties {
+fn parse_properties(doc: Dict(String, Toml), path: Path) -> Properties {
   dict.fold(doc, dict.new(), fn(acc, key, value) {
-    let new_prefix = case prefix {
-      "" -> key
-      _ -> prefix <> "." <> key
-    }
-    let props = parse_value(value, new_prefix)
+    let path = path |> path.segment(key)
+    let props = parse_value(value, path)
     dict.merge(acc, props)
   })
 }
 
-fn parse_value(value: Toml, prefix: String) -> Properties {
+fn parse_value(value: Toml, path: Path) -> Properties {
   case value {
-    Int(i) -> dict.insert(dict.new(), prefix, int.to_string(i))
-    Float(f) -> dict.insert(dict.new(), prefix, float.to_string(f))
-    Infinity(_) -> dict.insert(dict.new(), prefix, "nil")
-    Nan(_) -> dict.insert(dict.new(), prefix, "nil")
-    Bool(b) -> dict.insert(dict.new(), prefix, bool.to_string(b))
-    String(s) -> dict.insert(dict.new(), prefix, s)
-    Date(d) -> dict.insert(dict.new(), prefix, format_date(d))
-    Time(t) -> dict.insert(dict.new(), prefix, format_time(t))
-    DateTime(dt) -> dict.insert(dict.new(), prefix, format_datetime(dt))
+    Int(i) -> dict.insert(dict.new(), path.format(path), int.to_string(i))
+    Float(f) -> dict.insert(dict.new(), path.format(path), float.to_string(f))
+    Infinity(_) -> dict.insert(dict.new(), path.format(path), "nil")
+    Nan(_) -> dict.insert(dict.new(), path.format(path), "nil")
+    Bool(b) -> dict.insert(dict.new(), path.format(path), bool.to_string(b))
+    String(s) -> dict.insert(dict.new(), path.format(path), s)
+    Date(d) -> dict.insert(dict.new(), path.format(path), format_date(d))
+    Time(t) -> dict.insert(dict.new(), path.format(path), format_time(t))
+    DateTime(dt) ->
+      dict.insert(dict.new(), path.format(path), format_datetime(dt))
     Array(array) -> {
       list.index_fold(array, dict.new(), fn(acc, item, index) {
-        let new_prefix = prefix <> "[" <> int.to_string(index) <> "]"
-        let props = parse_value(item, new_prefix)
+        let path = path |> path.index(index)
+        let props = parse_value(item, path)
         dict.merge(acc, props)
       })
     }
     ArrayOfTables(tables) -> {
       list.index_fold(tables, dict.new(), fn(acc, table, index) {
-        let new_prefix = prefix <> "[" <> int.to_string(index) <> "]"
-        let props = parse_properties(table, new_prefix)
+        let path = path |> path.index(index)
+        let props = parse_properties(table, path)
         dict.merge(acc, props)
       })
     }
-    Table(table) -> parse_properties(table, prefix)
-    InlineTable(table) -> parse_properties(table, prefix)
+    Table(table) -> parse_properties(table, path)
+    InlineTable(table) -> parse_properties(table, path)
   }
 }
 
