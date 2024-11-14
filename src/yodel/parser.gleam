@@ -29,11 +29,6 @@ pub fn parse(
   resolved |> context.new |> Ok
 }
 
-/// if the user specified a format, use it
-/// otherwise, try to detect the format from the input
-/// if that fails, try to detect the format from the content
-/// and if that fails, as a last ditch effort...
-/// we brute force our way through all the parsers until one works
 fn parse_input(
   input: String,
   options: YodelOptions,
@@ -41,7 +36,22 @@ fn parse_input(
 ) -> Result(YodelContext, ConfigError) {
   use content <- get_content(input)
 
-  let format = case cfg.format(options) {
+  case get_format(input, content, options) {
+    Auto -> content |> parse_auto
+    Json -> content |> parse_json
+    Toml -> content |> parse_toml
+    Yaml -> content |> parse_yaml
+  }
+  |> result.then(handler)
+}
+
+/// if the user specified a format, use it
+/// otherwise, try to detect the format from the input
+/// if that fails, try to detect the format from the content
+/// and if that fails, as a last ditch effort...
+/// we brute force our way through all the parsers until one works
+fn get_format(input: String, content: String, options: YodelOptions) -> Format {
+  case cfg.format(options) {
     Auto ->
       case input |> detect_input |> detect_format {
         Auto -> content |> detect_input |> detect_format
@@ -49,14 +59,6 @@ fn parse_input(
       }
     format -> format
   }
-
-  case format {
-    Auto -> content |> parse_auto
-    Json -> content |> parse_json
-    Toml -> content |> parse_toml
-    Yaml -> content |> parse_yaml
-  }
-  |> result.then(handler)
 }
 
 fn get_content(
