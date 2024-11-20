@@ -12,7 +12,6 @@ glaml = { path = "../glaml" }
 envoy = ">= 1.0.2 and < 2.0.0"
 simplifile = ">= 2.2.0 and < 3.0.0"
 tom = ">= 0.3.0 and < 2.0.0"
-gleam_bbmustache = ">= 2.2.0 and < 3.0.0"
 birl = ">= 1.7.1 and < 2.0.0"
 
 [dev-dependencies]

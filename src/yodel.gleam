@@ -3,6 +3,13 @@ import yodel/options.{type YodelOptions} as cfg
 import yodel/parser
 import yodel/types.{type ConfigError, type GetError, type YodelContext}
 
+pub type ResolveMode =
+  cfg.ResolveMode
+
+pub const strict = cfg.Strict
+
+pub const lenient = cfg.Lenient
+
 pub type Format =
   cfg.Format
 
@@ -57,8 +64,18 @@ pub fn get_bool_or(ctx: YodelContext, key: String, default: Bool) -> Bool {
   context.get_bool_or(ctx, key, default)
 }
 
-pub fn options(format: Format, resolve: Bool, validate: Bool) -> YodelOptions {
-  cfg.new(format:, resolve:, validate:)
+pub fn options(
+  format: Format,
+  resolve_enabled: Bool,
+  resolve_mode: ResolveMode,
+  validate: Bool,
+) -> YodelOptions {
+  cfg.new(
+    format:,
+    resolve_enabled: resolve_enabled,
+    resolve_mode: resolve_mode,
+    validate:,
+  )
 }
 
 pub fn default_options() -> YodelOptions {
@@ -72,14 +89,21 @@ pub fn with_format(
   cfg.with_format(options:, format:)
 }
 
-pub fn with_resolve(
+pub fn with_resolve_enabled(
   options options: YodelOptions,
-  resolve resolve: Bool,
+  enabled enabled: Bool,
 ) -> YodelOptions {
-  cfg.with_resolve(options:, resolve:)
+  cfg.with_resolve_enabled(options:, enabled:)
 }
 
-pub fn with_validate(
+pub fn with_resolve_mode(
+  options options: YodelOptions,
+  mode mode: ResolveMode,
+) -> YodelOptions {
+  cfg.with_resolve_mode(options:, mode:)
+}
+
+pub fn with_validation(
   options options: YodelOptions,
   validate validate: Bool,
 ) -> YodelOptions {
@@ -90,8 +114,12 @@ pub fn format(options options: YodelOptions) -> Format {
   cfg.format(options)
 }
 
-pub fn resolve(options options: YodelOptions) -> Bool {
-  cfg.resolve(options)
+pub fn resolve_enabled(options options: YodelOptions) -> Bool {
+  cfg.resolve_enabled(options)
+}
+
+pub fn resolve_mode(options options: YodelOptions) -> ResolveMode {
+  cfg.resolve_mode(options)
 }
 
 pub fn validate(options options: YodelOptions) -> Bool {

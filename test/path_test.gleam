@@ -2,8 +2,8 @@ import startest.{describe, it}
 import startest/expect
 import yodel/path
 
-pub fn common_tests() {
-  describe("common", [
+pub fn path_tests() {
+  describe("path", [
     it("formats basic path", fn() {
       path.new()
       |> path.segment("foo")

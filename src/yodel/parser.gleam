@@ -6,7 +6,7 @@ import yodel/context
 import yodel/options.{type Format, type YodelOptions, Auto, Json, Toml, Yaml} as cfg
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/resolve
+import yodel/resolver
 import yodel/types.{
   type ConfigError, type Input, type Properties, type YodelContext,
   type YodelParser, Content, File, ParseError, UnknownFormat, YodelParser,
@@ -122,8 +122,8 @@ fn resolve(
   options: YodelOptions,
   handler: fn(Properties) -> Result(YodelContext, ConfigError),
 ) -> Result(YodelContext, ConfigError) {
-  case cfg.resolve(options) {
-    True -> resolve.properties(props)
+  case cfg.resolve_enabled(options) {
+    True -> resolver.resolve_properties(props, options)
     False -> props |> Ok
   }
   |> result.then(handler)

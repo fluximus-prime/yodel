@@ -1,8 +1,23 @@
 import gleam/dict.{type Dict}
+import gleam/option.{type Option}
 import yodel/options.{type Format}
 
 pub type Properties =
-  Dict(String, String)
+  Dict(Path, Value)
+
+pub type Property =
+  #(Path, Value)
+
+pub type PropertyType {
+  Path(Path)
+  Value(Value)
+}
+
+pub type Path =
+  String
+
+pub type Value =
+  String
 
 pub type YodelContext {
   YodelContext(props: Properties)
@@ -29,8 +44,8 @@ pub type ConfigError {
 }
 
 pub type GetError {
-  KeyNotFound(key: String)
-  TypeError(key: String, expected: GetType, got: String)
+  PathNotFound(path: String)
+  TypeError(path: String, expected: GetType, got: String)
 }
 
 pub type GetType {
@@ -61,7 +76,9 @@ pub type Location {
 }
 
 pub type ResolverError {
-  EnvVarNotFound(key: String)
+  UnresolvedPlaceholder(placeholder: String, value: String)
+  RegexError(details: String)
+  NoPlaceholderFound
 }
 
 pub type ValidationError {

@@ -1,10 +1,11 @@
 import gleam/int
 import yodel/types.{
   type ConfigError, type FileError, type ParseError, type ResolverError,
-  type SyntaxError, type ValidationError, EmptyConfig, EnvVarNotFound, FileError,
-  FileNotFound, FilePermissionDenied, FileReadError, InvalidConfig,
-  InvalidStructure, InvalidSyntax, Location, ParseError, ResolverError,
-  SyntaxError, UnknownFormat, ValidationError,
+  type SyntaxError, type ValidationError, EmptyConfig, FileError, FileNotFound,
+  FilePermissionDenied, FileReadError, InvalidConfig, InvalidStructure,
+  InvalidSyntax, Location, NoPlaceholderFound, ParseError, RegexError,
+  ResolverError, SyntaxError, UnknownFormat, UnresolvedPlaceholder,
+  ValidationError,
 }
 
 pub fn format_config_error(error: ConfigError) -> String {
@@ -48,7 +49,14 @@ fn format_syntax_error(error: SyntaxError) -> String {
 
 fn format_resolve_error(error: ResolverError) -> String {
   case error {
-    EnvVarNotFound(key) -> "Environment variable not found: " <> key
+    UnresolvedPlaceholder(placeholder, value) ->
+      "Could not resolve placeholder '"
+      <> placeholder
+      <> "' in value \""
+      <> value
+      <> "\""
+    RegexError(details) -> "Regex error: " <> details
+    NoPlaceholderFound -> "No placeholder found"
   }
 }
 
