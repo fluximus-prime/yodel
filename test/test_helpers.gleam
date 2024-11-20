@@ -1,3 +1,6 @@
+import envoy
+import gleam/dict.{type Dict}
+import gleam/option.{type Option, None, Some}
 import gleam/string
 import startest/expect
 import yodel.{type Format}
@@ -91,4 +94,40 @@ pub fn to_string(format: Format) {
   format
   |> string.inspect
   |> string.lowercase
+}
+
+pub fn with_env(envs: Dict(String, Option(String)), handler: fn() -> Nil) {
+  let old_envs = preserve_envs(envs)
+  set_envs(envs)
+  handler()
+  restore_envs(old_envs)
+}
+
+fn preserve_envs(
+  envs: Dict(String, Option(String)),
+) -> Dict(String, Option(String)) {
+  dict.map_values(envs, fn(key, _) {
+    case envoy.get(key) {
+      Ok(value) -> Some(value)
+      _ -> None
+    }
+  })
+}
+
+fn set_envs(envs: Dict(String, Option(String))) {
+  dict.each(envs, fn(key, value) {
+    case value {
+      Some(value) -> envoy.set(key, value)
+      None -> envoy.unset(key)
+    }
+  })
+}
+
+fn restore_envs(old_envs: Dict(String, Option(String))) {
+  dict.each(old_envs, fn(key, old_value) {
+    case old_value {
+      Some(old_value) -> envoy.set(key, old_value)
+      None -> envoy.unset(key)
+    }
+  })
 }
