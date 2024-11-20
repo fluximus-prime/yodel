@@ -1,7 +1,12 @@
+import gleam/result
 import yodel/context
 import yodel/options.{type YodelOptions} as cfg
 import yodel/parser
-import yodel/types.{type ConfigError, type GetError, type YodelContext}
+import yodel/resolver
+import yodel/types.{
+  type ConfigError, type GetError, type Properties, type YodelContext,
+}
+import yodel/validate
 
 pub type ResolveMode =
   cfg.ResolveMode
@@ -29,7 +34,10 @@ pub fn load_with_options(
   with options: YodelOptions,
   from input: String,
 ) -> Result(YodelContext, ConfigError) {
-  parser.parse(input, options)
+  use props <- do_parse(input, options)
+  use valid <- do_validate(props, options)
+  use resolved <- do_resolve(valid, options)
+  Ok(context.new(resolved))
 }
 
 pub fn get_string(ctx: YodelContext, key: String) -> Result(String, GetError) {
@@ -124,4 +132,37 @@ pub fn resolve_mode(options options: YodelOptions) -> ResolveMode {
 
 pub fn validate(options options: YodelOptions) -> Bool {
   cfg.validate(options)
+}
+
+fn do_parse(
+  input: String,
+  options: YodelOptions,
+  next: fn(Properties) -> Result(YodelContext, ConfigError),
+) -> Result(YodelContext, ConfigError) {
+  parser.parse(input, options)
+  |> result.then(next)
+}
+
+fn do_validate(
+  props: Properties,
+  options: YodelOptions,
+  handler: fn(Properties) -> Result(YodelContext, ConfigError),
+) -> Result(YodelContext, ConfigError) {
+  case cfg.validate(options) {
+    True -> validate.properties(props)
+    False -> props |> Ok
+  }
+  |> result.then(handler)
+}
+
+fn do_resolve(
+  props: Properties,
+  options: YodelOptions,
+  handler: fn(Properties) -> Result(YodelContext, ConfigError),
+) -> Result(YodelContext, ConfigError) {
+  case cfg.resolve_enabled(options) {
+    True -> resolver.resolve_properties(props, options)
+    False -> props |> Ok
+  }
+  |> result.then(handler)
 }

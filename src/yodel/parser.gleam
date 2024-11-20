@@ -2,17 +2,14 @@ import gleam/list
 import gleam/result
 import gleam/string
 import simplifile
-import yodel/context
 import yodel/options.{type Format, type YodelOptions, Auto, Json, Toml, Yaml} as cfg
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/resolver
 import yodel/types.{
-  type ConfigError, type Input, type Properties, type YodelContext,
-  type YodelParser, Content, File, ParseError, UnknownFormat, YodelParser,
+  type ConfigError, type Input, type Properties, type YodelParser, Content, File,
+  ParseError, UnknownFormat, YodelParser,
 }
 import yodel/utils
-import yodel/validate
 
 const parsers = [
   YodelParser("toml", toml.detect, toml.parse),
@@ -22,18 +19,16 @@ const parsers = [
 pub fn parse(
   from input: String,
   with options: YodelOptions,
-) -> Result(YodelContext, ConfigError) {
+) -> Result(Properties, ConfigError) {
   use props <- parse_input(input, options)
-  use valid <- validate(props, options)
-  use resolved <- resolve(valid, options)
-  resolved |> context.new |> Ok
+  props |> Ok
 }
 
 fn parse_input(
   input: String,
   options: YodelOptions,
-  handler: fn(Properties) -> Result(YodelContext, ConfigError),
-) -> Result(YodelContext, ConfigError) {
+  handler: fn(Properties) -> Result(Properties, ConfigError),
+) -> Result(Properties, ConfigError) {
   use content <- get_content(input)
 
   case get_format(input, content, options) {
@@ -63,8 +58,8 @@ fn get_format(input: String, content: String, options: YodelOptions) -> Format {
 
 fn get_content(
   input: String,
-  handler: fn(String) -> Result(YodelContext, ConfigError),
-) -> Result(YodelContext, ConfigError) {
+  handler: fn(String) -> Result(Properties, ConfigError),
+) -> Result(Properties, ConfigError) {
   case input |> detect_input {
     File(path) -> utils.read_file(path)
     Content(content) -> Ok(content)
@@ -103,30 +98,6 @@ fn parse_toml(content: String) -> Result(Properties, ConfigError) {
 
 fn parse_yaml(content: String) -> Result(Properties, ConfigError) {
   yaml.parse(content)
-}
-
-fn validate(
-  props: Properties,
-  options: YodelOptions,
-  handler: fn(Properties) -> Result(YodelContext, ConfigError),
-) -> Result(YodelContext, ConfigError) {
-  case cfg.validate(options) {
-    True -> validate.properties(props)
-    False -> props |> Ok
-  }
-  |> result.then(handler)
-}
-
-fn resolve(
-  props: Properties,
-  options: YodelOptions,
-  handler: fn(Properties) -> Result(YodelContext, ConfigError),
-) -> Result(YodelContext, ConfigError) {
-  case cfg.resolve_enabled(options) {
-    True -> resolver.resolve_properties(props, options)
-    False -> props |> Ok
-  }
-  |> result.then(handler)
 }
 
 fn try_parsers(
