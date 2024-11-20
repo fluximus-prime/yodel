@@ -1,5 +1,4 @@
 import gleam/dict.{type Dict}
-import gleam/option.{type Option}
 import yodel/options.{type Format}
 
 pub type Properties =
