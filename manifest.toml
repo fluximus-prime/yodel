@@ -9,7 +9,7 @@ packages = [
   { name = "envoy", version = "1.0.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "envoy", source = "hex", outer_checksum = "95FD059345AA982E89A0B6E2A3BF1CF43E17A7048DCD85B5B65D3B9E4E39D359" },
   { name = "exception", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "exception", source = "hex", outer_checksum = "F5580D584F16A20B7FCDCABF9E9BE9A2C1F6AC4F9176FA6DD0B63E3B20D450AA" },
   { name = "filepath", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "filepath", source = "hex", outer_checksum = "EFB6FF65C98B2A16378ABC3EE2B14124168C0CE5201553DE652E2644DCFDB594" },
-  { name = "glaml", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "yamerl"], otp_app = "glaml", source = "hex", outer_checksum = "19633BA2BFD498A978FCCAA5DFDC6F350DF1C0205BA718D96F8092A376FED54B" },
+  { name = "glaml", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib", "yamerl"], otp_app = "glaml", source = "hex", outer_checksum = "B1D1166C15A615DE3BFF7D1D59FAC7B58756F26320AD811EBC9D04DC889084F3" },
   { name = "gleam_bbmustache", version = "2.2.0", build_tools = ["gleam"], requirements = ["bbmustache", "gleam_stdlib"], otp_app = "gleam_bbmustache", source = "hex", outer_checksum = "95863431B77C1701BAB2BF68FDAA8DA838C3C59ECB0183D2687E145B4A355285" },
   { name = "gleam_community_ansi", version = "1.4.1", build_tools = ["gleam"], requirements = ["gleam_community_colour", "gleam_stdlib"], otp_app = "gleam_community_ansi", source = "hex", outer_checksum = "4CD513FC62523053E62ED7BAC2F36136EC17D6A8942728250A9A00A15E340E4B" },
   { name = "gleam_community_colour", version = "1.4.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib"], otp_app = "gleam_community_colour", source = "hex", outer_checksum = "795964217EBEDB3DA656F5EB8F67D7AD22872EB95182042D3E7AFEF32D3FD2FE" },
@@ -31,7 +31,7 @@ packages = [
 [requirements]
 birl = { version = ">= 1.7.1 and < 2.0.0" }
 envoy = { version = ">= 1.0.2 and < 2.0.0" }
-glaml = { version = ">= 1.0.1 and < 2.0.0" }
+glaml = { version = ">= 1.0.1 and < 3.0.0" }
 gleam_bbmustache = { version = ">= 2.2.0 and < 3.0.0" }
 gleam_stdlib = { version = ">= 0.34.0 and < 2.0.0" }
 simplifile = { version = ">= 2.2.0 and < 3.0.0" }
