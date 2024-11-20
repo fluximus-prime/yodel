@@ -34,9 +34,9 @@ pub fn load_with_options(
   with options: YodelOptions,
   from input: String,
 ) -> Result(YodelContext, ConfigError) {
-  use props <- do_parse(input, options)
-  use valid <- do_validate(props, options)
-  use resolved <- do_resolve(valid, options)
+  use parsed <- do_parse(input, options)
+  use validated <- do_validate(parsed, options)
+  use resolved <- do_resolve(validated, options)
   Ok(context.new(resolved))
 }
 
