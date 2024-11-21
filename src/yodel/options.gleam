@@ -82,6 +82,6 @@ pub fn resolve_mode(options options: YodelOptions) -> ResolveMode {
   options.resolve.mode
 }
 
-pub fn validate(options options: YodelOptions) -> Bool {
+pub fn validate_enabled(options options: YodelOptions) -> Bool {
   options.validate
 }

@@ -3,7 +3,7 @@ import yodel/types.{
   type ConfigError, type Properties, EmptyConfig, InvalidConfig, ValidationError,
 }
 
-pub fn properties(props: Properties) -> Result(Properties, ConfigError) {
+pub fn validate_properties(props: Properties) -> Result(Properties, ConfigError) {
   case dict.size(props) {
     0 -> EmptyConfig |> ValidationError |> Error
     1 -> {

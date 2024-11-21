@@ -6,7 +6,7 @@ import yodel/resolver
 import yodel/types.{
   type ConfigError, type GetError, type Properties, type YodelContext,
 }
-import yodel/validate
+import yodel/validator
 
 pub type ResolveMode =
   cfg.ResolveMode
@@ -130,8 +130,8 @@ pub fn resolve_mode(options options: YodelOptions) -> ResolveMode {
   cfg.resolve_mode(options)
 }
 
-pub fn validate(options options: YodelOptions) -> Bool {
-  cfg.validate(options)
+pub fn validate_enabled(options options: YodelOptions) -> Bool {
+  cfg.validate_enabled(options)
 }
 
 fn do_parse(
@@ -148,8 +148,8 @@ fn do_validate(
   options: YodelOptions,
   handler: fn(Properties) -> Result(YodelContext, ConfigError),
 ) -> Result(YodelContext, ConfigError) {
-  case cfg.validate(options) {
-    True -> validate.properties(props)
+  case cfg.validate_enabled(options) {
+    True -> validator.validate_properties(props)
     False -> props |> Ok
   }
   |> result.then(handler)
