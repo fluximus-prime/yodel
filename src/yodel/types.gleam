@@ -23,12 +23,14 @@ pub type YodelContext {
 }
 
 pub type YodelParser {
-  YodelParser(
-    name: String,
-    detect: fn(Input) -> Format,
-    parse: fn(String) -> Result(Properties, ConfigError),
-  )
+  YodelParser(name: String, detect: DetectFunction, parse: ParseFunction)
 }
+
+pub type DetectFunction =
+  fn(Input) -> Format
+
+pub type ParseFunction =
+  fn(String) -> Result(Properties, ConfigError)
 
 pub type Input {
   File(path: String)
