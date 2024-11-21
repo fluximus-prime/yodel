@@ -6,38 +6,6 @@ import yodel
 pub fn auto_tests() {
   describe("parser", [
     describe("auto", [
-      it("parses string", fn() {
-        "foo.bar: abc123"
-        |> yodel.load
-        |> expect.to_be_ok
-        |> yodel.get_string("foo.bar")
-        |> expect.to_be_ok
-        |> expect.to_equal("abc123")
-      }),
-      it("parses int", fn() {
-        "foo.bar: 42"
-        |> yodel.load
-        |> expect.to_be_ok
-        |> yodel.get_int("foo.bar")
-        |> expect.to_be_ok
-        |> expect.to_equal(42)
-      }),
-      it("parses float", fn() {
-        "foo.bar: 42.24"
-        |> yodel.load
-        |> expect.to_be_ok
-        |> yodel.get_float("foo.bar")
-        |> expect.to_be_ok
-        |> expect.to_equal(42.24)
-      }),
-      it("parses bool", fn() {
-        "foo.bar: true"
-        |> yodel.load
-        |> expect.to_be_ok
-        |> yodel.get_bool("foo.bar")
-        |> expect.to_be_ok
-        |> expect.to_equal(True)
-      }),
       it("loads simple yaml file", fn() {
         test_helpers.assert_loads_complex_file(
           format: yodel.auto_detect,

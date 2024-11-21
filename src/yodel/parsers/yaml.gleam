@@ -88,7 +88,7 @@ fn parse_properties(node: DocNode, path: Path) -> Properties {
     DocNodeMap(pairs) -> {
       list.fold(pairs, dict.new(), fn(acc, pair) {
         let key = extract_key(pair.0)
-        let path = path |> path.segment(key)
+        let path = path |> path.add_segment(key)
         let props = parse_properties(pair.1, path)
         dict.merge(acc, props)
       })
@@ -96,20 +96,20 @@ fn parse_properties(node: DocNode, path: Path) -> Properties {
 
     DocNodeSeq(items) -> {
       list.index_fold(items, dict.new(), fn(acc, item, index) {
-        let path = path |> path.index(index)
+        let path = path |> path.add_index(index)
         let props = parse_properties(item, path)
         dict.merge(acc, props)
       })
     }
 
-    DocNodeStr(value) -> dict.insert(dict.new(), path.format(path), value)
+    DocNodeStr(value) -> utils.new_properties(path.path_to_string(path), value)
     DocNodeBool(value) ->
-      dict.insert(dict.new(), path.format(path), bool.to_string(value))
+      utils.new_properties(path.path_to_string(path), bool.to_string(value))
     DocNodeInt(value) ->
-      dict.insert(dict.new(), path.format(path), int.to_string(value))
+      utils.new_properties(path.path_to_string(path), int.to_string(value))
     DocNodeFloat(value) ->
-      dict.insert(dict.new(), path.format(path), float.to_string(value))
-    DocNodeNil -> dict.insert(dict.new(), path.format(path), "nil")
+      utils.new_properties(path.path_to_string(path), float.to_string(value))
+    DocNodeNil -> utils.new_properties(path.path_to_string(path), "nil")
   }
 }
 

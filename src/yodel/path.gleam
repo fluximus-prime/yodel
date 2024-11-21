@@ -13,15 +13,15 @@ pub fn new() -> Path {
   []
 }
 
-pub fn segment(path: Path, segment: String) -> Path {
+pub fn add_segment(path: Path, segment: String) -> Path {
   [Key(segment), ..path]
 }
 
-pub fn index(path: Path, index: Int) -> Path {
+pub fn add_index(path: Path, index: Int) -> Path {
   [Index(index), ..path]
 }
 
-pub fn format(segments: Path) -> String {
+pub fn path_to_string(segments: Path) -> String {
   segments
   |> list.fold_right("", fn(acc, segment) {
     case segment {

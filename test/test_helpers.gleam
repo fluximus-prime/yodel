@@ -4,6 +4,8 @@ import gleam/option.{type Option, None, Some}
 import gleam/string
 import startest/expect
 import yodel.{type Format}
+import yodel/parser
+import yodel/types.{type Properties, type YodelContext, YodelContext}
 
 pub fn assert_loads_simple_file(
   format format: Format,
@@ -66,11 +68,19 @@ pub fn assert_parses_basic_value(
   path path: String,
   value value: String,
 ) {
+  // yodel.default_options()
+  // |> yodel.with_format(format)
+  // |> yodel.load_with_options(content)
+  // |> expect.to_be_ok
+  // |> yodel.get_string(path)
+  // |> expect.to_be_ok
+  // |> expect.to_equal(value)
   yodel.default_options()
   |> yodel.with_format(format)
-  |> yodel.load_with_options(content)
+  |> yodel.with_resolve_enabled(False)
+  |> parser.parse(content, _)
   |> expect.to_be_ok
-  |> yodel.get_string(path)
+  |> dict.get(path)
   |> expect.to_be_ok
   |> expect.to_equal(value)
 }

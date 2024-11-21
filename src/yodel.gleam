@@ -111,11 +111,11 @@ pub fn with_resolve_mode(
   cfg.with_resolve_mode(options:, mode:)
 }
 
-pub fn with_validation(
+pub fn with_validate_enabled(
   options options: YodelOptions,
   validate validate: Bool,
 ) -> YodelOptions {
-  cfg.with_validate(options:, validate:)
+  cfg.with_validate_enabled(options:, validate:)
 }
 
 pub fn format(options options: YodelOptions) -> Format {

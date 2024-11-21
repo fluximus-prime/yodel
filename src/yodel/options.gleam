@@ -63,7 +63,7 @@ pub fn with_resolve_mode(
   new(options.format, options.resolve.enabled, mode, options.validate)
 }
 
-pub fn with_validate(
+pub fn with_validate_enabled(
   options options: YodelOptions,
   validate validate: Bool,
 ) -> YodelOptions {
