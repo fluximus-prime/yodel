@@ -1,27 +1,68 @@
-import glaml.{type DocError, DocError}
 import gleam/int
-import gleam/string
-import simplifile.{type FileError}
-import tom.{type ParseError, KeyAlreadyInUse, Unexpected}
-
-pub fn doc_error_to_string(error: DocError) -> String {
-  let DocError(msg, loc) = error
-  let #(line, col) = loc
-  "Error at line "
-  <> int.to_string(line)
-  <> ","
-  <> int.to_string(col)
-  <> ": "
-  <> msg
+import yodel/types.{
+  type ConfigError, type FileError, type ParseError, type ResolverError,
+  type SyntaxError, type ValidationError, EmptyConfig, FileError, FileNotFound,
+  FilePermissionDenied, FileReadError, InvalidConfig, InvalidStructure,
+  InvalidSyntax, Location, NoPlaceholderFound, ParseError, RegexError,
+  ResolverError, SyntaxError, UnknownFormat, UnresolvedPlaceholder,
+  ValidationError,
 }
 
-pub fn file_error_to_string(error: FileError) -> String {
-  simplifile.describe_error(error)
-}
-
-pub fn parse_error_to_string(error: ParseError) -> String {
+pub fn format_config_error(error: ConfigError) -> String {
   case error {
-    Unexpected(got, expected) -> "Got " <> got <> ", expected " <> expected
-    KeyAlreadyInUse(key) -> "Key already in use: " <> string.join(key, ".")
+    FileError(file_error) -> format_file_error(file_error)
+    ParseError(parse_error) -> format_parse_error(parse_error)
+    ResolverError(resolve_error) -> format_resolve_error(resolve_error)
+    ValidationError(validation_error) ->
+      format_validation_error(validation_error)
+  }
+}
+
+fn format_file_error(error: FileError) -> String {
+  case error {
+    FileNotFound(path) -> "File not found: " <> path
+    FilePermissionDenied(path) -> "Permission denied: " <> path
+    FileReadError(details) -> "Error reading file: " <> details
+  }
+}
+
+fn format_parse_error(error: ParseError) -> String {
+  case error {
+    InvalidSyntax(error) -> format_syntax_error(error)
+    InvalidStructure(details) -> details
+    UnknownFormat -> "Unable to determine config format"
+  }
+}
+
+fn format_syntax_error(error: SyntaxError) -> String {
+  let SyntaxError(format, location, message) = error
+  let Location(line, column) = location
+  "Syntax error in "
+  <> format
+  <> " at line "
+  <> int.to_string(line)
+  <> ", column "
+  <> int.to_string(column)
+  <> ": "
+  <> message
+}
+
+fn format_resolve_error(error: ResolverError) -> String {
+  case error {
+    UnresolvedPlaceholder(placeholder, value) ->
+      "Could not resolve placeholder '"
+      <> placeholder
+      <> "' in value \""
+      <> value
+      <> "\""
+    RegexError(details) -> "Regex error: " <> details
+    NoPlaceholderFound -> "No placeholder found"
+  }
+}
+
+fn format_validation_error(error: ValidationError) -> String {
+  case error {
+    EmptyConfig -> "Empty config"
+    InvalidConfig(details) -> "Invalid config: " <> details
   }
 }

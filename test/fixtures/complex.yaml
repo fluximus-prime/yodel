@@ -19,12 +19,13 @@ database:
   port: ${DB_PORT:5432}
   credentials:
     username: ${DB_USER:admin}
-    password: ${DB_PASS:"p@ssw0rd!"}
+    password: ${DB_PASS:p@ssw0rd!}
 
 features:
   - logging
   - monitoring
-  - "multi-line\nfeature"
+  - "multi-line
+      feature"
 
 nested:
   level1:

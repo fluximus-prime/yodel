@@ -1,33 +1,35 @@
 import gleam/dict
+import gleam/list
 import gleam/result
+import gleam/string
 import simplifile
-import yodel/errors
 import yodel/types.{
-  type Properties, type YodelContext, type YodelError, InvalidPath,
+  type ConfigError, type Path, type Properties, type Value, FileError,
+  FileNotFound, FilePermissionDenied, FileReadError,
 }
 
-pub fn read_file(
-  from path: String,
-  then handler: fn(String) -> Result(YodelContext, YodelError),
-) -> Result(YodelContext, YodelError) {
-  simplifile.read(path)
-  |> result.map_error(fn(err) {
-    InvalidPath(err |> errors.file_error_to_string)
-  })
-  |> result.then(handler)
-}
-
-pub fn is_valid(props: Properties) -> Bool {
-  case dict.size(props) {
-    // prevent empty configs
-    0 -> False
-    1 -> {
-      // prevent broken configs
-      case dict.get(props, "") {
-        Ok(_) -> False
-        Error(_) -> True
-      }
-    }
-    _ -> True
+pub fn get_extension_from_path(path: String) -> String {
+  case
+    path |> string.trim |> string.lowercase |> string.split(".") |> list.last
+  {
+    Ok(ext) -> string.lowercase(ext)
+    _ -> ""
   }
+}
+
+pub fn read_file(from path: String) -> Result(String, ConfigError) {
+  simplifile.read(path)
+  |> result.map_error(fn(err) { map_simplifile_error(err) })
+}
+
+fn map_simplifile_error(error: simplifile.FileError) -> ConfigError {
+  FileError(case error {
+    simplifile.Eacces -> FilePermissionDenied(simplifile.describe_error(error))
+    simplifile.Enoent -> FileNotFound(simplifile.describe_error(error))
+    _ -> FileReadError(simplifile.describe_error(error))
+  })
+}
+
+pub fn new_properties(path: Path, value: Value) -> Properties {
+  dict.insert(dict.new(), path, value)
 }

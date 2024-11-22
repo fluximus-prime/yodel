@@ -1,32 +1,123 @@
 import envoy
-import gleam/bbmustache.{string}
 import gleam/dict
-import gleam/io
-import yodel/types.{type Properties}
+import gleam/int
+import gleam/list
+import gleam/option.{type Option, None, Some}
+import gleam/regex.{type CompileError, type Regex}
+import gleam/result
+import gleam/string
+import yodel/options.{type ResolveMode, type YodelOptions, Lenient, Strict} as cfg
+import yodel/types.{
+  type ConfigError, type Properties, RegexError, ResolverError,
+  UnresolvedPlaceholder,
+}
 
-pub fn resolve_properties(on props: Properties) -> Properties {
-  dict.fold(props, dict.new(), fn(acc, key, value) {
-    let resolved = resolve_property(#(key, value))
-    dict.merge(acc, resolved)
+const placeholder_pattern = "\\$\\{([^:}]+)(?::((?:[^${}]+|\\$\\{(?:[^{}]*\\{[^{}]*\\})*[^{}]*\\})*))?\\}"
+
+type Placeholder {
+  Placeholder(content: String, env_var: String, default: Option(String))
+}
+
+pub fn resolve_properties(
+  properties: Properties,
+  options: YodelOptions,
+) -> Result(Properties, ConfigError) {
+  use pattern <- result.try(compile_placeholder_regex())
+
+  dict.fold(over: properties, from: Ok(dict.new()), with: fn(acc, path, value) {
+    case acc {
+      Ok(resolved_props) -> {
+        case resolve_value(value, pattern, cfg.resolve_mode(options), []) {
+          Ok(resolved_value) ->
+            Ok(dict.insert(resolved_props, path, resolved_value))
+          Error(err) -> {
+            case cfg.resolve_mode(options) {
+              Lenient -> Ok(resolved_props)
+              Strict -> Error(err)
+            }
+          }
+        }
+      }
+      Error(err) -> Error(err)
+    }
   })
 }
 
-pub fn resolve_property(on property: #(String, String)) -> Properties {
-  let #(key, value) = property
-  io.debug("Resolving property: " <> key <> " -> " <> value)
-  let rendered = case bbmustache.compile(value) {
-    Ok(template) ->
-      bbmustache.render(template, [
-        #(
-          key,
-          string(case envoy.get(key) {
-            Ok(value) -> value
-            Error(_) -> value
-          }),
-        ),
-      ])
-    Error(_) -> value
+fn resolve_value(
+  value: String,
+  pattern: Regex,
+  mode: ResolveMode,
+  attempted: List(String),
+) -> Result(String, ConfigError) {
+  case find_next_placeholder(value, pattern) {
+    None -> Ok(value)
+    Some(placeholder) -> {
+      case list.contains(attempted, placeholder.env_var) {
+        True ->
+          case mode {
+            Lenient -> Ok(value)
+            Strict ->
+              Error(
+                ResolverError(UnresolvedPlaceholder(
+                  placeholder.env_var,
+                  placeholder.content,
+                )),
+              )
+          }
+        False -> {
+          use resolved <- result.try(resolve_placeholder(placeholder, mode))
+          let updated = string.replace(value, placeholder.content, resolved)
+          resolve_value(updated, pattern, mode, [
+            placeholder.env_var,
+            ..attempted
+          ])
+        }
+      }
+    }
   }
-  io.debug("Resolved property: " <> key <> " -> " <> rendered)
-  dict.from_list([#(key, rendered)])
+}
+
+fn find_next_placeholder(value: String, pattern: Regex) -> Option(Placeholder) {
+  case regex.scan(pattern, value) {
+    [] -> None
+    [match, ..] -> {
+      case match.submatches {
+        [Some(env_var), default] ->
+          Some(Placeholder(match.content, env_var, default))
+        [Some(env_var)] -> Some(Placeholder(match.content, env_var, None))
+        _ -> None
+      }
+    }
+  }
+}
+
+fn resolve_placeholder(
+  placeholder: Placeholder,
+  mode: ResolveMode,
+) -> Result(String, ConfigError) {
+  case envoy.get(placeholder.env_var) {
+    Ok(value) -> Ok(value)
+    Error(_) ->
+      case placeholder.default, mode {
+        Some(default_value), _ -> Ok(default_value)
+        None, Lenient -> Ok(placeholder.content)
+        None, Strict ->
+          Error(
+            ResolverError(UnresolvedPlaceholder(
+              placeholder.env_var,
+              placeholder.content,
+            )),
+          )
+      }
+  }
+}
+
+fn compile_placeholder_regex() -> Result(Regex, ConfigError) {
+  regex.from_string(placeholder_pattern) |> result.map_error(map_compile_error)
+}
+
+fn map_compile_error(error: CompileError) -> ConfigError {
+  ResolverError(RegexError(
+    error.error <> " at " <> int.to_string(error.byte_index),
+  ))
 }
