@@ -37,9 +37,8 @@ fn detect_format_from_path(path: String) -> Format {
 fn detect_format_from_content(content: String) -> Format {
   let trimmed = string.trim(content)
   case
-    string.contains(trimmed, "[")
-    && string.contains(trimmed, "]")
-    && string.contains(trimmed, "=")
+    string.contains(trimmed, "=")
+    && !string.contains(trimmed, ": ")
     && !string.starts_with(trimmed, "---")
   {
     True -> options.Toml

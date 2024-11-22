@@ -106,9 +106,7 @@ fn try_parsers(
 ) -> Result(Properties, ConfigError) {
   list.fold(parsers, Error(ParseError(UnknownFormat)), fn(acc, parser) {
     case acc {
-      Ok(props) -> {
-        Ok(props)
-      }
+      Ok(props) -> Ok(props)
       Error(_) -> parser.parse(content)
     }
   })

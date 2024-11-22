@@ -19,39 +19,36 @@ pub fn resolver_tests() {
         |> expect.to_equal("fooey")
       }),
       it("resolves simple placeholder", fn() {
-        dict.from_list([#("BAR", Some("fooey"))])
-        |> with_env(fn() {
-          dict.from_list([#("foo", "${BAR}")])
-          |> resolver.resolve_properties(yodel.default_options())
-          |> expect.to_be_ok
-          |> dict.get("foo")
-          |> expect.to_be_ok
-          |> expect.to_equal("fooey")
-        })
+        let env = dict.from_list([#("BAR", Some("fooey"))])
+        use <- with_env(env)
+        dict.from_list([#("foo", "${BAR}")])
+        |> resolver.resolve_properties(yodel.default_options())
+        |> expect.to_be_ok
+        |> dict.get("foo")
+        |> expect.to_be_ok
+        |> expect.to_equal("fooey")
       }),
       it("ignores default value when placeholder resolves", fn() {
-        dict.from_list([#("BAR", Some("fooey"))])
-        |> with_env(fn() {
-          dict.from_list([#("foo", "${BAR:fooed}")])
-          |> resolver.resolve_properties(yodel.default_options())
-          |> expect.to_be_ok
-          |> dict.get("foo")
-          |> expect.to_be_ok
-          |> expect.to_equal("fooey")
-        })
+        let env = dict.from_list([#("BAR", Some("fooey"))])
+        use <- with_env(env)
+        dict.from_list([#("foo", "${BAR:fooed}")])
+        |> resolver.resolve_properties(yodel.default_options())
+        |> expect.to_be_ok
+        |> dict.get("foo")
+        |> expect.to_be_ok
+        |> expect.to_equal("fooey")
       }),
     ]),
     describe("nested placeholders", [
       it("resolves nested placeholders", fn() {
-        dict.from_list([#("BAZ", Some("fooey"))])
-        |> with_env(fn() {
-          dict.from_list([#("foo", "${BAR:${BAZ}}")])
-          |> resolver.resolve_properties(yodel.default_options())
-          |> expect.to_be_ok
-          |> dict.get("foo")
-          |> expect.to_be_ok
-          |> expect.to_equal("fooey")
-        })
+        let env = dict.from_list([#("BAZ", Some("fooey"))])
+        use <- with_env(env)
+        dict.from_list([#("foo", "${BAR:${BAZ}}")])
+        |> resolver.resolve_properties(yodel.default_options())
+        |> expect.to_be_ok
+        |> dict.get("foo")
+        |> expect.to_be_ok
+        |> expect.to_equal("fooey")
       }),
       it("resolves nested placeholder defaults", fn() {
         dict.from_list([#("foo", "${BAR:${BAZ:fooey}}")])
@@ -64,15 +61,15 @@ pub fn resolver_tests() {
     ]),
     describe("multiple placeholders", [
       it("resolves multiple placeholders", fn() {
-        dict.from_list([#("BAR", Some("fooey")), #("BAZ", Some("dooey"))])
-        |> with_env(fn() {
-          dict.from_list([#("foo", "${BAR}-${BAZ}")])
-          |> resolver.resolve_properties(yodel.default_options())
-          |> expect.to_be_ok
-          |> dict.get("foo")
-          |> expect.to_be_ok
-          |> expect.to_equal("fooey-dooey")
-        })
+        let env =
+          dict.from_list([#("BAR", Some("fooey")), #("BAZ", Some("dooey"))])
+        use <- with_env(env)
+        dict.from_list([#("foo", "${BAR}-${BAZ}")])
+        |> resolver.resolve_properties(yodel.default_options())
+        |> expect.to_be_ok
+        |> dict.get("foo")
+        |> expect.to_be_ok
+        |> expect.to_equal("fooey-dooey")
       }),
       it("resolved multiple placeholder defaults", fn() {
         dict.from_list([#("foo", "${BAR:fooey}-${BAZ:dooey}")])

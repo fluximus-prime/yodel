@@ -1,7 +1,6 @@
 import gleam/list
 import startest.{describe, it}
 import startest/expect
-import test_helpers.{with_env}
 import yodel.{type Format}
 import yodel/parsers/toml
 import yodel/parsers/yaml
