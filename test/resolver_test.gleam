@@ -91,7 +91,8 @@ pub fn resolver_tests() {
     describe("resolution mode", [
       it("fails in strict mode with missing env var", fn() {
         let options =
-          yodel.default_options() |> yodel.with_resolve_mode(yodel.strict)
+          yodel.default_options()
+          |> yodel.with_resolve_mode(yodel.resolve_strict)
         properties.new()
         |> properties.insert("foo", "${MISSING}")
         |> resolver.resolve_properties(options)
@@ -102,7 +103,8 @@ pub fn resolver_tests() {
       }),
       it("preserves placeholder in lenient mode", fn() {
         let options =
-          yodel.default_options() |> yodel.with_resolve_mode(yodel.lenient)
+          yodel.default_options()
+          |> yodel.with_resolve_mode(yodel.resolve_lenient)
         properties.new()
         |> properties.insert("foo", "${MISSING}")
         |> resolver.resolve_properties(options)

@@ -10,20 +10,20 @@ import yodel/validator
 pub type ResolveMode =
   options.ResolveMode
 
-pub const strict = options.Strict
+pub const resolve_strict = options.Strict
 
-pub const lenient = options.Lenient
+pub const resolve_lenient = options.Lenient
 
 pub type Format =
   options.Format
 
-pub const auto_detect = options.Auto
+pub const format_auto = options.Auto
 
-pub const json = options.Json
+pub const format_json = options.Json
 
-pub const toml = options.Toml
+pub const format_toml = options.Toml
 
-pub const yaml = options.Yaml
+pub const format_yaml = options.Yaml
 
 pub fn load(from input: String) -> Result(Context, ConfigError) {
   load_with_options(default_options(), input)
