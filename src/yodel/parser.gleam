@@ -10,12 +10,12 @@ import yodel/parsers/yaml
 import yodel/properties.{type Properties}
 
 const parsers = [
-  YodelParser("toml", toml.detect, toml.parse),
-  YodelParser("json/yaml", yaml.detect, yaml.parse),
+  Parser("toml", toml.detect, toml.parse),
+  Parser("json/yaml", yaml.detect, yaml.parse),
 ]
 
-pub type YodelParser {
-  YodelParser(name: String, detect: DetectFunction, parse: ParseFunction)
+pub type Parser {
+  Parser(name: String, detect: DetectFunction, parse: ParseFunction)
 }
 
 type ParserResult =
