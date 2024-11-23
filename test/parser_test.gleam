@@ -1,13 +1,13 @@
-import gleam/dict
 import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
 import startest.{describe, it}
 import startest/expect
+import yodel/parser.{type ParseFunction}
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/types.{type ParseFunction}
+import yodel/properties
 
 type TestCase {
   TestCase(
@@ -107,28 +107,28 @@ pub fn parser_tests() {
         it("loads basic value", fn() {
           parse(basic_input)
           |> expect.to_be_ok
-          |> dict.get("foo.bar")
+          |> properties.get("foo.bar")
           |> expect.to_be_ok
           |> expect.to_equal("fooey")
         }),
         it("loads array", fn() {
           parse(array_input)
           |> expect.to_be_ok
-          |> dict.get("foo[1].baz")
+          |> properties.get("foo[1].baz")
           |> expect.to_be_ok
           |> expect.to_equal("fooed")
         }),
         it("returns a string", fn() {
           parse(string_input)
           |> expect.to_be_ok
-          |> dict.get("foo.bar")
+          |> properties.get("foo.bar")
           |> expect.to_be_ok
           |> expect.to_equal("fooey")
         }),
         it("returns an int", fn() {
           parse(int_input)
           |> expect.to_be_ok
-          |> dict.get("foo.bar")
+          |> properties.get("foo.bar")
           |> expect.to_be_ok
           |> int.parse
           |> expect.to_be_ok
@@ -137,7 +137,7 @@ pub fn parser_tests() {
         it("returns a float", fn() {
           parse(float_input)
           |> expect.to_be_ok
-          |> dict.get("foo.bar")
+          |> properties.get("foo.bar")
           |> expect.to_be_ok
           |> float.parse
           |> expect.to_be_ok
@@ -148,7 +148,7 @@ pub fn parser_tests() {
           case
             parse(bool_input)
             |> expect.to_be_ok
-            |> dict.get("foo.bar")
+            |> properties.get("foo.bar")
             |> expect.to_be_ok
             |> string.lowercase
           {

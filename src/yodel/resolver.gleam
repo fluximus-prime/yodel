@@ -1,18 +1,20 @@
 import envoy
-import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/regex.{type CompileError, type Regex}
 import gleam/result
 import gleam/string
-import yodel/options.{type ResolveMode, type YodelOptions, Lenient, Strict} as cfg
-import yodel/types.{
-  type ConfigError, type Properties, RegexError, ResolverError,
-  UnresolvedPlaceholder,
+import yodel/errors.{
+  type ConfigError, RegexError, ResolverError, UnresolvedPlaceholder,
 }
+import yodel/options.{type Options, type ResolveMode, Lenient, Strict}
+import yodel/properties.{type Properties}
 
 const placeholder_pattern = "\\$\\{([^:}]+)(?::((?:[^${}]+|\\$\\{(?:[^{}]*\\{[^{}]*\\})*[^{}]*\\})*))?\\}"
+
+type Resolution =
+  Result(Properties, ConfigError)
 
 type Placeholder {
   Placeholder(content: String, env_var: String, default: Option(String))
@@ -20,27 +22,33 @@ type Placeholder {
 
 pub fn resolve_properties(
   properties: Properties,
-  options: YodelOptions,
-) -> Result(Properties, ConfigError) {
+  options: Options,
+) -> Resolution {
   use pattern <- result.try(compile_placeholder_regex())
 
-  dict.fold(over: properties, from: Ok(dict.new()), with: fn(acc, path, value) {
-    case acc {
-      Ok(resolved_props) -> {
-        case resolve_value(value, pattern, cfg.resolve_mode(options), []) {
-          Ok(resolved_value) ->
-            Ok(dict.insert(resolved_props, path, resolved_value))
-          Error(err) -> {
-            case cfg.resolve_mode(options) {
-              Lenient -> Ok(resolved_props)
-              Strict -> Error(err)
+  properties.fold(
+    over: properties,
+    from: Ok(properties.new()),
+    with: fn(acc, path, value) {
+      case acc {
+        Ok(resolved_props) -> {
+          case
+            resolve_value(value, pattern, options.get_resolve_mode(options), [])
+          {
+            Ok(resolved_value) ->
+              Ok(properties.insert(resolved_props, path, resolved_value))
+            Error(err) -> {
+              case options.get_resolve_mode(options) {
+                Lenient -> Ok(resolved_props)
+                Strict -> Error(err)
+              }
             }
           }
         }
+        Error(err) -> Error(err)
       }
-      Error(err) -> Error(err)
-    }
-  })
+    },
+  )
 }
 
 fn resolve_value(

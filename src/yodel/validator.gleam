@@ -1,13 +1,13 @@
-import gleam/dict
-import yodel/types.{
-  type ConfigError, type Properties, EmptyConfig, InvalidConfig, ValidationError,
+import yodel/errors.{
+  type ConfigError, EmptyConfig, InvalidConfig, ValidationError,
 }
+import yodel/properties.{type Properties}
 
 pub fn validate_properties(props: Properties) -> Result(Properties, ConfigError) {
-  case dict.size(props) {
+  case properties.size(props) {
     0 -> EmptyConfig |> ValidationError |> Error
     1 -> {
-      case dict.get(props, "") {
+      case properties.get(props, "") {
         Ok(_) ->
           InvalidConfig("Invalid config: value without key")
           |> ValidationError

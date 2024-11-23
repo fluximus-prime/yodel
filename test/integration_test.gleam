@@ -6,7 +6,7 @@ import startest.{describe, it}
 import startest/expect
 import test_helpers.{with_env}
 import yodel.{type Format}
-import yodel/types.{ResolverError, UnresolvedPlaceholder}
+import yodel/errors.{ResolverError, UnresolvedPlaceholder}
 
 type TestCase {
   TestCase(

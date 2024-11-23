@@ -4,7 +4,7 @@ import startest/expect
 import yodel.{type Format}
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/types.{type DetectFunction, Content, File}
+import yodel/types.{type Input, Content, File}
 
 type TestCase {
   TestCase(
@@ -12,7 +12,7 @@ type TestCase {
     format: Format,
     extensions: List(String),
     content: String,
-    detect: DetectFunction,
+    detect: fn(Input) -> Format,
   )
 }
 

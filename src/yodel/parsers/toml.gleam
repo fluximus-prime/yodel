@@ -9,12 +9,14 @@ import tom.{
   type Date, type DateTime, type Time, type Toml, Array, ArrayOfTables, Bool,
   Date, DateTime, Float, Infinity, InlineTable, Int, Nan, String, Table, Time,
 }
+import yodel/errors.{
+  type ConfigError, InvalidStructure, InvalidSyntax, Location, ParseError,
+  SyntaxError,
+}
 import yodel/options.{type Format, Auto, Toml}
 import yodel/path.{type Path}
-import yodel/types.{
-  type ConfigError, type Input, type Properties, Content, File, InvalidStructure,
-  InvalidSyntax, Location, ParseError, SyntaxError,
-}
+import yodel/properties.{type Properties}
+import yodel/types.{type Input, Content, File}
 import yodel/utils
 
 const known_extensions = ["toml", "tml"]
@@ -54,42 +56,69 @@ pub fn parse(from content: String) -> Result(Properties, ConfigError) {
 }
 
 fn parse_properties(doc: Dict(String, Toml), path: Path) -> Properties {
-  dict.fold(doc, dict.new(), fn(acc, key, value) {
+  dict.fold(doc, properties.new(), fn(acc, key, value) {
     let path = path |> path.add_segment(key)
     let props = parse_value(value, path)
-    dict.merge(acc, props)
+    properties.merge(acc, props)
   })
 }
 
 fn parse_value(value: Toml, path: Path) -> Properties {
   case value {
     Int(i) ->
-      dict.insert(dict.new(), path.path_to_string(path), int.to_string(i))
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        int.to_string(i),
+      )
     Float(f) ->
-      dict.insert(dict.new(), path.path_to_string(path), float.to_string(f))
-    Infinity(_) -> dict.insert(dict.new(), path.path_to_string(path), "nil")
-    Nan(_) -> dict.insert(dict.new(), path.path_to_string(path), "nil")
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        float.to_string(f),
+      )
+    Infinity(_) ->
+      properties.insert(properties.new(), path.path_to_string(path), "nil")
+    Nan(_) ->
+      properties.insert(properties.new(), path.path_to_string(path), "nil")
     Bool(b) ->
-      dict.insert(dict.new(), path.path_to_string(path), bool.to_string(b))
-    String(s) -> dict.insert(dict.new(), path.path_to_string(path), s)
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        bool.to_string(b),
+      )
+    String(s) ->
+      properties.insert(properties.new(), path.path_to_string(path), s)
     Date(d) ->
-      dict.insert(dict.new(), path.path_to_string(path), format_date(d))
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        format_date(d),
+      )
     Time(t) ->
-      dict.insert(dict.new(), path.path_to_string(path), format_time(t))
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        format_time(t),
+      )
     DateTime(dt) ->
-      dict.insert(dict.new(), path.path_to_string(path), format_datetime(dt))
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        format_datetime(dt),
+      )
     Array(array) -> {
-      list.index_fold(array, dict.new(), fn(acc, item, index) {
+      list.index_fold(array, properties.new(), fn(acc, item, index) {
         let path = path |> path.add_index(index)
         let props = parse_value(item, path)
-        dict.merge(acc, props)
+        properties.merge(acc, props)
       })
     }
     ArrayOfTables(tables) -> {
-      list.index_fold(tables, dict.new(), fn(acc, table, index) {
+      list.index_fold(tables, properties.new(), fn(acc, table, index) {
         let path = path |> path.add_index(index)
         let props = parse_properties(table, path)
-        dict.merge(acc, props)
+        properties.merge(acc, props)
       })
     }
     Table(table) -> parse_properties(table, path)

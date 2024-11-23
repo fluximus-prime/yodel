@@ -2,13 +2,12 @@ import gleam/list
 import gleam/result
 import gleam/string
 import simplifile
-import yodel/options.{type Format, type YodelOptions, Auto, Json, Toml, Yaml} as cfg
+import yodel/errors.{type ConfigError, ParseError, UnknownFormat}
+import yodel/options.{type Format, type Options, Auto, Json, Toml, Yaml}
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/types.{
-  type ConfigError, type Input, type Properties, type YodelParser, Content, File,
-  ParseError, UnknownFormat, YodelParser,
-}
+import yodel/properties.{type Properties}
+import yodel/types.{type Input, Content, File}
 import yodel/utils
 
 const parsers = [
@@ -16,9 +15,22 @@ const parsers = [
   YodelParser("json/yaml", yaml.detect, yaml.parse),
 ]
 
+pub type YodelParser {
+  YodelParser(name: String, detect: DetectFunction, parse: ParseFunction)
+}
+
+type ParserResult =
+  Result(Properties, ConfigError)
+
+pub type DetectFunction =
+  fn(Input) -> Format
+
+pub type ParseFunction =
+  fn(String) -> ParserResult
+
 pub fn parse(
   from input: String,
-  with options: YodelOptions,
+  with options: Options,
 ) -> Result(Properties, ConfigError) {
   use props <- parse_input(input, options)
   props |> Ok
@@ -26,16 +38,16 @@ pub fn parse(
 
 fn parse_input(
   input: String,
-  options: YodelOptions,
+  options: Options,
   handler: fn(Properties) -> Result(Properties, ConfigError),
 ) -> Result(Properties, ConfigError) {
   use content <- get_content(input)
 
   case get_format(input, content, options) {
-    Auto -> content |> parse_auto
     Json -> content |> parse_json
     Toml -> content |> parse_toml
     Yaml -> content |> parse_yaml
+    Auto -> Error(ParseError(UnknownFormat))
   }
   |> result.then(handler)
 }
@@ -43,10 +55,9 @@ fn parse_input(
 /// if the user specified a format, use it
 /// otherwise, try to detect the format from the input
 /// if that fails, try to detect the format from the content
-/// and if that fails, as a last ditch effort...
-/// we brute force our way through all the parsers until one works
-fn get_format(input: String, content: String, options: YodelOptions) -> Format {
-  case cfg.format(options) {
+/// and if that fails, return `Auto` because we didn't figure it out
+fn get_format(input: String, content: String, options: Options) -> Format {
+  case options.get_format(options) {
     Auto ->
       case input |> detect_input |> detect_format {
         Auto -> content |> detect_input |> detect_format
@@ -75,16 +86,12 @@ fn detect_input(input: String) -> Input {
 }
 
 fn detect_format(input: Input) -> Format {
-  list.fold(parsers, cfg.Auto, fn(acc, parser) {
+  list.fold(parsers, options.Auto, fn(acc, parser) {
     case acc {
-      cfg.Auto -> parser.detect(input)
+      options.Auto -> parser.detect(input)
       _ -> acc
     }
   })
-}
-
-fn parse_auto(content: String) -> Result(Properties, ConfigError) {
-  try_parsers(parsers, content)
 }
 
 fn parse_json(content: String) -> Result(Properties, ConfigError) {
@@ -98,16 +105,4 @@ fn parse_toml(content: String) -> Result(Properties, ConfigError) {
 
 fn parse_yaml(content: String) -> Result(Properties, ConfigError) {
   yaml.parse(content)
-}
-
-fn try_parsers(
-  parsers: List(YodelParser),
-  content: String,
-) -> Result(Properties, ConfigError) {
-  list.fold(parsers, Error(ParseError(UnknownFormat)), fn(acc, parser) {
-    case acc {
-      Ok(props) -> Ok(props)
-      Error(_) -> parser.parse(content)
-    }
-  })
 }

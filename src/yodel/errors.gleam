@@ -1,11 +1,53 @@
 import gleam/int
-import yodel/types.{
-  type ConfigError, type FileError, type ParseError, type ResolverError,
-  type SyntaxError, type ValidationError, EmptyConfig, FileError, FileNotFound,
-  FilePermissionDenied, FileReadError, InvalidConfig, InvalidStructure,
-  InvalidSyntax, Location, NoPlaceholderFound, ParseError, RegexError,
-  ResolverError, SyntaxError, UnknownFormat, UnresolvedPlaceholder,
-  ValidationError,
+
+pub type ConfigError {
+  FileError(FileError)
+  ParseError(ParseError)
+  ResolverError(ResolverError)
+  ValidationError(ValidationError)
+}
+
+pub type GetError {
+  PathNotFound(path: String)
+  TypeError(path: String, expected: GetType, got: String)
+}
+
+pub type GetType {
+  BoolValue
+  FloatValue
+  IntValue
+  StringValue
+}
+
+pub type FileError {
+  FileNotFound(path: String)
+  FilePermissionDenied(path: String)
+  FileReadError(details: String)
+}
+
+pub type ParseError {
+  InvalidSyntax(SyntaxError)
+  InvalidStructure(details: String)
+  UnknownFormat
+}
+
+pub type SyntaxError {
+  SyntaxError(format: String, location: Location, message: String)
+}
+
+pub type Location {
+  Location(line: Int, column: Int)
+}
+
+pub type ResolverError {
+  UnresolvedPlaceholder(placeholder: String, value: String)
+  RegexError(details: String)
+  NoPlaceholderFound
+}
+
+pub type ValidationError {
+  EmptyConfig
+  InvalidConfig(details: String)
 }
 
 pub fn format_config_error(error: ConfigError) -> String {

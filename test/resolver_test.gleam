@@ -4,37 +4,41 @@ import startest.{describe, it}
 import startest/expect
 import test_helpers.{with_env}
 import yodel
+import yodel/errors.{ResolverError, UnresolvedPlaceholder}
+import yodel/properties
 import yodel/resolver
-import yodel/types.{ResolverError, UnresolvedPlaceholder}
 
 pub fn resolver_tests() {
   describe("resolver", [
     describe("basic resolution", [
       it("resolves simple placeholder default", fn() {
-        dict.from_list([#("foo", "${BAR:fooey}")])
+        properties.new()
+        |> properties.insert("foo", "${BAR:fooey}")
         |> resolver.resolve_properties(yodel.default_options())
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("fooey")
       }),
       it("resolves simple placeholder", fn() {
         let env = dict.from_list([#("BAR", Some("fooey"))])
         use <- with_env(env)
-        dict.from_list([#("foo", "${BAR}")])
+        properties.new()
+        |> properties.insert("foo", "${BAR}")
         |> resolver.resolve_properties(yodel.default_options())
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("fooey")
       }),
       it("ignores default value when placeholder resolves", fn() {
         let env = dict.from_list([#("BAR", Some("fooey"))])
         use <- with_env(env)
-        dict.from_list([#("foo", "${BAR:fooed}")])
+        properties.new()
+        |> properties.insert("foo", "${BAR:fooed}")
         |> resolver.resolve_properties(yodel.default_options())
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("fooey")
       }),
@@ -43,18 +47,20 @@ pub fn resolver_tests() {
       it("resolves nested placeholders", fn() {
         let env = dict.from_list([#("BAZ", Some("fooey"))])
         use <- with_env(env)
-        dict.from_list([#("foo", "${BAR:${BAZ}}")])
+        properties.new()
+        |> properties.insert("foo", "${BAR:${BAZ}}")
         |> resolver.resolve_properties(yodel.default_options())
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("fooey")
       }),
       it("resolves nested placeholder defaults", fn() {
-        dict.from_list([#("foo", "${BAR:${BAZ:fooey}}")])
+        properties.new()
+        |> properties.insert("foo", "${BAR:${BAZ:fooey}}")
         |> resolver.resolve_properties(yodel.default_options())
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("fooey")
       }),
@@ -64,18 +70,20 @@ pub fn resolver_tests() {
         let env =
           dict.from_list([#("BAR", Some("fooey")), #("BAZ", Some("dooey"))])
         use <- with_env(env)
-        dict.from_list([#("foo", "${BAR}-${BAZ}")])
+        properties.new()
+        |> properties.insert("foo", "${BAR}-${BAZ}")
         |> resolver.resolve_properties(yodel.default_options())
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("fooey-dooey")
       }),
       it("resolved multiple placeholder defaults", fn() {
-        dict.from_list([#("foo", "${BAR:fooey}-${BAZ:dooey}")])
+        properties.new()
+        |> properties.insert("foo", "${BAR:fooey}-${BAZ:dooey}")
         |> resolver.resolve_properties(yodel.default_options())
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("fooey-dooey")
       }),
@@ -84,7 +92,8 @@ pub fn resolver_tests() {
       it("fails in strict mode with missing env var", fn() {
         let options =
           yodel.default_options() |> yodel.with_resolve_mode(yodel.strict)
-        dict.from_list([#("foo", "${MISSING}")])
+        properties.new()
+        |> properties.insert("foo", "${MISSING}")
         |> resolver.resolve_properties(options)
         |> expect.to_be_error
         |> expect.to_equal(
@@ -94,10 +103,11 @@ pub fn resolver_tests() {
       it("preserves placeholder in lenient mode", fn() {
         let options =
           yodel.default_options() |> yodel.with_resolve_mode(yodel.lenient)
-        dict.from_list([#("foo", "${MISSING}")])
+        properties.new()
+        |> properties.insert("foo", "${MISSING}")
         |> resolver.resolve_properties(options)
         |> expect.to_be_ok
-        |> dict.get("foo")
+        |> properties.get("foo")
         |> expect.to_be_ok
         |> expect.to_equal("${MISSING}")
       }),

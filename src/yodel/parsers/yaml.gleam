@@ -3,17 +3,17 @@ import glaml.{
   DocNodeSeq, DocNodeStr,
 }
 import gleam/bool
-import gleam/dict
 import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
+import yodel/errors.{
+  type ConfigError, InvalidSyntax, Location, ParseError, SyntaxError,
+}
 import yodel/options.{type Format, Auto, Json, Yaml}
 import yodel/path.{type Path}
-import yodel/types.{
-  type ConfigError, type Input, type Properties, Content, File, InvalidSyntax,
-  Location, ParseError, SyntaxError,
-}
+import yodel/properties.{type Properties}
+import yodel/types.{type Input, Content, File}
 import yodel/utils
 
 const known_extensions = [
@@ -86,19 +86,19 @@ pub fn parse(from string: String) -> Result(Properties, ConfigError) {
 fn parse_properties(node: DocNode, path: Path) -> Properties {
   case node {
     DocNodeMap(pairs) -> {
-      list.fold(pairs, dict.new(), fn(acc, pair) {
+      list.fold(pairs, properties.new(), fn(acc, pair) {
         let key = extract_key(pair.0)
         let path = path |> path.add_segment(key)
         let props = parse_properties(pair.1, path)
-        dict.merge(acc, props)
+        properties.merge(acc, props)
       })
     }
 
     DocNodeSeq(items) -> {
-      list.index_fold(items, dict.new(), fn(acc, item, index) {
+      list.index_fold(items, properties.new(), fn(acc, item, index) {
         let path = path |> path.add_index(index)
         let props = parse_properties(item, path)
-        dict.merge(acc, props)
+        properties.merge(acc, props)
       })
     }
 
