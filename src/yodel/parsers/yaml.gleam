@@ -10,11 +10,10 @@ import gleam/string
 import yodel/errors.{
   type ConfigError, InvalidSyntax, Location, ParseError, SyntaxError,
 }
+import yodel/input.{type Input, Content, File}
 import yodel/options.{type Format, Auto, Json, Yaml}
 import yodel/path.{type Path}
 import yodel/properties.{type Properties}
-import yodel/types.{type Input, Content, File}
-import yodel/utils
 
 const known_extensions = [
   #("json", ["json", "jsn", "json5", "jsonc"]), #("yaml", ["yaml", "yml"]),
@@ -32,7 +31,7 @@ pub fn detect(input: Input) -> Format {
 }
 
 fn detect_format_from_path(path: String) -> Format {
-  let ext = utils.get_extension_from_path(path)
+  let ext = input.get_extension_from_path(path)
   case
     list.find(known_extensions, fn(entry) {
       let #(_, exts) = entry
@@ -102,14 +101,28 @@ fn parse_properties(node: DocNode, path: Path) -> Properties {
       })
     }
 
-    DocNodeStr(value) -> utils.new_properties(path.path_to_string(path), value)
+    DocNodeStr(value) ->
+      properties.insert(properties.new(), path.path_to_string(path), value)
     DocNodeBool(value) ->
-      utils.new_properties(path.path_to_string(path), bool.to_string(value))
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        bool.to_string(value),
+      )
     DocNodeInt(value) ->
-      utils.new_properties(path.path_to_string(path), int.to_string(value))
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        int.to_string(value),
+      )
     DocNodeFloat(value) ->
-      utils.new_properties(path.path_to_string(path), float.to_string(value))
-    DocNodeNil -> utils.new_properties(path.path_to_string(path), "nil")
+      properties.insert(
+        properties.new(),
+        path.path_to_string(path),
+        float.to_string(value),
+      )
+    DocNodeNil ->
+      properties.insert(properties.new(), path.path_to_string(path), "nil")
   }
 }
 

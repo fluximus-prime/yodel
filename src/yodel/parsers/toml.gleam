@@ -13,11 +13,10 @@ import yodel/errors.{
   type ConfigError, InvalidStructure, InvalidSyntax, Location, ParseError,
   SyntaxError,
 }
+import yodel/input.{type Input, Content, File}
 import yodel/options.{type Format, Auto, Toml}
 import yodel/path.{type Path}
 import yodel/properties.{type Properties}
-import yodel/types.{type Input, Content, File}
-import yodel/utils
 
 const known_extensions = ["toml", "tml"]
 
@@ -29,7 +28,7 @@ pub fn detect(input: Input) -> Format {
 }
 
 fn detect_format_from_path(path: String) -> Format {
-  let ext = utils.get_extension_from_path(path)
+  let ext = input.get_extension_from_path(path)
   case list.contains(known_extensions, ext) {
     True -> options.Toml
     False -> Auto

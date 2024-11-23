@@ -3,12 +3,11 @@ import gleam/result
 import gleam/string
 import simplifile
 import yodel/errors.{type ConfigError, ParseError, UnknownFormat}
+import yodel/input.{type Input, Content, File}
 import yodel/options.{type Format, type Options, Auto, Json, Toml, Yaml}
 import yodel/parsers/toml
 import yodel/parsers/yaml
 import yodel/properties.{type Properties}
-import yodel/types.{type Input, Content, File}
-import yodel/utils
 
 const parsers = [
   YodelParser("toml", toml.detect, toml.parse),
@@ -72,7 +71,7 @@ fn get_content(
   handler: fn(String) -> Result(Properties, ConfigError),
 ) -> Result(Properties, ConfigError) {
   case input |> detect_input {
-    File(path) -> utils.read_file(path)
+    File(path) -> input.read_file(path)
     Content(content) -> Ok(content)
   }
   |> result.then(handler)

@@ -2,10 +2,14 @@ import gleam/list
 import gleam/result
 import gleam/string
 import simplifile
-import yodel/properties.{type Path, type Properties, type Value}
 
 import yodel/errors.{
   type ConfigError, FileError, FileNotFound, FilePermissionDenied, FileReadError,
+}
+
+pub type Input {
+  File(path: String)
+  Content(content: String)
 }
 
 pub fn get_extension_from_path(path: String) -> String {
@@ -28,8 +32,4 @@ fn map_simplifile_error(error: simplifile.FileError) -> ConfigError {
     simplifile.Enoent -> FileNotFound(simplifile.describe_error(error))
     _ -> FileReadError(simplifile.describe_error(error))
   })
-}
-
-pub fn new_properties(path: Path, value: Value) -> Properties {
-  properties.insert(properties.new(), path, value)
 }
