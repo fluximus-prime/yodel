@@ -41,7 +41,7 @@ pub fn load_with_options(
   use format <- select(input, content, options)
   use resolved <- resolve(content, options)
   use parsed <- parse(resolved, format)
-  use validated <- validate(parsed, options)
+  use validated <- validate(parsed)
   Ok(context.new(validated))
 }
 
@@ -131,21 +131,6 @@ pub fn lenient_resolve(options options: Options) -> Options {
   with_resolve_mode(options, resolve_lenient)
 }
 
-pub fn with_validation_enabled(
-  options options: Options,
-  validate validate: Bool,
-) -> Options {
-  options.with_validation_enabled(options:, validate:)
-}
-
-pub fn enable_validation(options options: Options) -> Options {
-  with_validation_enabled(options, True)
-}
-
-pub fn disable_validation(options options: Options) -> Options {
-  with_validation_enabled(options, False)
-}
-
 pub fn get_format(options options: Options) -> Format {
   options.get_format(options)
 }
@@ -156,10 +141,6 @@ pub fn is_resolve_enabled(options options: Options) -> Bool {
 
 pub fn get_resolve_mode(options options: Options) -> ResolveMode {
   options.get_resolve_mode(options)
-}
-
-pub fn is_validation_enabled(options options: Options) -> Bool {
-  options.is_validation_enabled(options)
 }
 
 fn parse(
@@ -173,13 +154,9 @@ fn parse(
 
 fn validate(
   props: Properties,
-  options: Options,
   handler: fn(Properties) -> Result(Context, ConfigError),
 ) -> Result(Context, ConfigError) {
-  case options.is_validation_enabled(options) {
-    True -> validator.validate_properties(props)
-    False -> props |> Ok
-  }
+  validator.validate_properties(props)
   |> result.then(handler)
 }
 

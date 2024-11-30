@@ -1,5 +1,5 @@
 pub opaque type Options {
-  Options(format: Format, resolve: ResolveOptions, validate: Bool)
+  Options(format: Format, resolve: ResolveOptions)
 }
 
 pub type Format {
@@ -22,12 +22,10 @@ pub fn new(
   format format: Format,
   resolve_enabled resolve_enabled: Bool,
   resolve_mode resolve_mode: ResolveMode,
-  validate validate: Bool,
 ) -> Options {
   Options(
     format:,
     resolve: new_resolve_options(enabled: resolve_enabled, mode: resolve_mode),
-    validate:,
   )
 }
 
@@ -39,32 +37,25 @@ pub fn new_resolve_options(
 }
 
 pub fn default() -> Options {
-  new(Auto, True, Lenient, True)
+  new(Auto, True, Lenient)
 }
 
 pub fn with_format(options options: Options, format format: Format) -> Options {
-  new(format, options.resolve.enabled, options.resolve.mode, options.validate)
+  new(format, options.resolve.enabled, options.resolve.mode)
 }
 
 pub fn with_resolve_enabled(
   options options: Options,
   enabled enabled: Bool,
 ) -> Options {
-  new(options.format, enabled, options.resolve.mode, options.validate)
+  new(options.format, enabled, options.resolve.mode)
 }
 
 pub fn with_resolve_mode(
   options options: Options,
   mode mode: ResolveMode,
 ) -> Options {
-  new(options.format, options.resolve.enabled, mode, options.validate)
-}
-
-pub fn with_validation_enabled(
-  options options: Options,
-  validate validate: Bool,
-) -> Options {
-  new(options.format, options.resolve.enabled, options.resolve.mode, validate)
+  new(options.format, options.resolve.enabled, mode)
 }
 
 pub fn get_format(options options: Options) -> Format {
@@ -77,8 +68,4 @@ pub fn is_resolve_enabled(options options: Options) -> Bool {
 
 pub fn get_resolve_mode(options options: Options) -> ResolveMode {
   options.resolve.mode
-}
-
-pub fn is_validation_enabled(options options: Options) -> Bool {
-  options.validate
 }
