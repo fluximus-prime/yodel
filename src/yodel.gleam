@@ -44,7 +44,7 @@
 //// - Optional return default values if the key is not found.
 
 import gleam/result
-import yodel/context.{type Context}
+import yodel/context
 import yodel/errors.{type ConfigError}
 import yodel/format.{FormatDetector}
 import yodel/input
@@ -55,6 +55,13 @@ import yodel/parsers/yaml
 import yodel/properties.{type Properties, type PropertiesError}
 import yodel/resolver
 import yodel/validator
+
+/// The Context type, representing a configuration context.
+/// This is the main type used to hold configuration values.
+/// It is opaque, meaning you cannot access the properties directly.
+/// Use the provided functions to access the configuration values.
+pub type Context =
+  context.Context
 
 /// The Resolve Mode to use, either `resolve_strict` or `resolve_lenient`.
 /// `resolve_strict` will fail if any placeholder is unresolved.
