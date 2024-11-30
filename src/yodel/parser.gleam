@@ -1,96 +1,26 @@
-import gleam/list
-import gleam/result
-import gleam/string
-import simplifile
 import yodel/errors.{type ConfigError, ParseError, UnknownFormat}
-import yodel/input.{type Input, Content, File}
-import yodel/options.{type Format, type Options, Auto, Json, Toml, Yaml}
+import yodel/options.{type Format, Auto, Json, Toml, Yaml}
 import yodel/parsers/toml
 import yodel/parsers/yaml
 import yodel/properties.{type Properties}
 
-const parsers = [
-  Parser("toml", toml.detect, toml.parse),
-  Parser("json/yaml", yaml.detect, yaml.parse),
-]
-
 pub type Parser {
-  Parser(name: String, detect: DetectFunction, parse: ParseFunction)
+  Parser(name: String, parse: ParseFunction)
 }
-
-type ParserResult =
-  Result(Properties, ConfigError)
-
-pub type DetectFunction =
-  fn(Input) -> Format
 
 pub type ParseFunction =
-  fn(String) -> ParserResult
+  fn(String) -> Result(Properties, ConfigError)
 
 pub fn parse(
-  from input: String,
-  with options: Options,
+  from content: String,
+  with format: Format,
 ) -> Result(Properties, ConfigError) {
-  use props <- parse_input(input, options)
-  props |> Ok
-}
-
-fn parse_input(
-  input: String,
-  options: Options,
-  handler: fn(Properties) -> Result(Properties, ConfigError),
-) -> Result(Properties, ConfigError) {
-  use content <- get_content(input)
-
-  case get_format(input, content, options) {
+  case format {
     Json -> content |> parse_json
     Toml -> content |> parse_toml
     Yaml -> content |> parse_yaml
     Auto -> Error(ParseError(UnknownFormat))
   }
-  |> result.then(handler)
-}
-
-/// if the user specified a format, use it
-/// otherwise, try to detect the format from the input
-/// if that fails, try to detect the format from the content
-/// and if that fails, return `Auto` because we didn't figure it out
-fn get_format(input: String, content: String, options: Options) -> Format {
-  case options.get_format(options) {
-    Auto ->
-      case input |> detect_input |> detect_format {
-        Auto -> content |> detect_input |> detect_format
-        format -> format
-      }
-    format -> format
-  }
-}
-
-fn get_content(
-  input: String,
-  handler: fn(String) -> Result(Properties, ConfigError),
-) -> Result(Properties, ConfigError) {
-  case input |> detect_input {
-    File(path) -> input.read_file(path)
-    Content(content) -> Ok(content)
-  }
-  |> result.then(handler)
-}
-
-fn detect_input(input: String) -> Input {
-  case string.trim(input) |> simplifile.is_file {
-    Ok(True) -> File(input)
-    _ -> Content(input)
-  }
-}
-
-fn detect_format(input: Input) -> Format {
-  list.fold(parsers, options.Auto, fn(acc, parser) {
-    case acc {
-      options.Auto -> parser.detect(input)
-      _ -> acc
-    }
-  })
 }
 
 fn parse_json(content: String) -> Result(Properties, ConfigError) {

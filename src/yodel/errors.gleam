@@ -7,18 +7,6 @@ pub type ConfigError {
   ValidationError(ValidationError)
 }
 
-pub type GetError {
-  PathNotFound(path: String)
-  TypeError(path: String, expected: GetType, got: String)
-}
-
-pub type GetType {
-  BoolValue
-  FloatValue
-  IntValue
-  StringValue
-}
-
 pub type FileError {
   FileNotFound(path: String)
   FilePermissionDenied(path: String)

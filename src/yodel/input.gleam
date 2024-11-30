@@ -2,7 +2,6 @@ import gleam/list
 import gleam/result
 import gleam/string
 import simplifile
-
 import yodel/errors.{
   type ConfigError, FileError, FileNotFound, FilePermissionDenied, FileReadError,
 }
@@ -10,6 +9,20 @@ import yodel/errors.{
 pub type Input {
   File(path: String)
   Content(content: String)
+}
+
+pub fn get_content(input: String) -> Result(String, ConfigError) {
+  case input |> detect_input {
+    File(path) -> read_file(path)
+    Content(content) -> Ok(content)
+  }
+}
+
+pub fn detect_input(input: String) -> Input {
+  case string.trim(input) |> simplifile.is_file {
+    Ok(True) -> File(input)
+    _ -> Content(input)
+  }
 }
 
 pub fn get_extension_from_path(path: String) -> String {

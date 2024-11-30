@@ -1,9 +1,13 @@
 import gleam/result
 import yodel/context.{type Context}
-import yodel/errors.{type ConfigError, type GetError}
-import yodel/options.{type Options, Lenient, Strict}
+import yodel/errors.{type ConfigError}
+import yodel/format.{FormatDetector}
+import yodel/input
+import yodel/options.{type Options}
 import yodel/parser
-import yodel/properties.{type Properties}
+import yodel/parsers/toml
+import yodel/parsers/yaml
+import yodel/properties.{type GetError, type Properties}
 import yodel/resolver
 import yodel/validator
 
@@ -17,13 +21,13 @@ pub const resolve_lenient = options.Lenient
 pub type Format =
   options.Format
 
-pub const format_auto = options.Auto
+pub const auto_format = options.Auto
 
-pub const format_json = options.Json
+pub const json_format = options.Json
 
-pub const format_toml = options.Toml
+pub const toml_format = options.Toml
 
-pub const format_yaml = options.Yaml
+pub const yaml_format = options.Yaml
 
 pub fn load(from input: String) -> Result(Context, ConfigError) {
   load_with_options(default_options(), input)
@@ -33,10 +37,12 @@ pub fn load_with_options(
   with options: Options,
   from input: String,
 ) -> Result(Context, ConfigError) {
-  use parsed <- parse(input, options)
+  use content <- read(input)
+  use format <- select(input, content, options)
+  use resolved <- resolve(content, options)
+  use parsed <- parse(resolved, format)
   use validated <- validate(parsed, options)
-  use resolved <- resolve(validated, options)
-  Ok(context.new(resolved))
+  Ok(context.new(validated))
 }
 
 pub fn get_string(ctx: Context, key: String) -> Result(String, GetError) {
@@ -79,6 +85,22 @@ pub fn with_format(options options: Options, format format: Format) -> Options {
   options.with_format(options:, format:)
 }
 
+pub fn format_json(options options: Options) -> Options {
+  with_format(options, json_format)
+}
+
+pub fn format_toml(options options: Options) -> Options {
+  with_format(options, toml_format)
+}
+
+pub fn format_yaml(options options: Options) -> Options {
+  with_format(options, yaml_format)
+}
+
+pub fn format_auto(options options: Options) -> Options {
+  with_format(options, auto_format)
+}
+
 pub fn with_resolve_enabled(
   options options: Options,
   enabled enabled: Bool,
@@ -102,11 +124,11 @@ pub fn with_resolve_mode(
 }
 
 pub fn strict_resolve(options options: Options) -> Options {
-  with_resolve_mode(options, Strict)
+  with_resolve_mode(options, resolve_strict)
 }
 
 pub fn lenient_resolve(options options: Options) -> Options {
-  with_resolve_mode(options, Lenient)
+  with_resolve_mode(options, resolve_lenient)
 }
 
 pub fn with_validation_enabled(
@@ -142,10 +164,10 @@ pub fn is_validation_enabled(options options: Options) -> Bool {
 
 fn parse(
   input: String,
-  options: Options,
+  format: Format,
   next: fn(Properties) -> Result(Context, ConfigError),
 ) -> Result(Context, ConfigError) {
-  parser.parse(input, options)
+  parser.parse(input, format)
   |> result.then(next)
 }
 
@@ -162,13 +184,44 @@ fn validate(
 }
 
 fn resolve(
-  props: Properties,
+  input: String,
   options: Options,
-  handler: fn(Properties) -> Result(Context, ConfigError),
+  handler: fn(String) -> Result(Context, ConfigError),
 ) -> Result(Context, ConfigError) {
   case options.is_resolve_enabled(options) {
-    True -> resolver.resolve_properties(props, options)
-    False -> props |> Ok
+    True -> resolver.resolve_placeholders(input, options)
+    False -> input |> Ok
   }
+  |> result.then(handler)
+}
+
+fn read(
+  input: String,
+  handler: fn(String) -> Result(Context, ConfigError),
+) -> Result(Context, ConfigError) {
+  case input.get_content(input) {
+    Ok(content) -> Ok(content)
+    Error(e) -> Error(e)
+  }
+  |> result.then(handler)
+}
+
+fn select(
+  input: String,
+  content: String,
+  options: Options,
+  handler: fn(Format) -> Result(Context, ConfigError),
+) -> Result(Context, ConfigError) {
+  let formats = [
+    FormatDetector("toml", toml.detect),
+    FormatDetector("json/yaml", yaml.detect),
+  ]
+  case format.get_format(input, content, options, formats) {
+    options.Json -> json_format
+    options.Toml -> toml_format
+    options.Yaml -> yaml_format
+    options.Auto -> auto_format
+  }
+  |> Ok
   |> result.then(handler)
 }

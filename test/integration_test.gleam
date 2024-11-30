@@ -33,7 +33,7 @@ pub fn integration_tests() {
   let test_cases = [
     TestCase(
       format_name: "toml",
-      format: yodel.format_toml,
+      format: yodel.toml_format,
       extension: "toml",
       string_input: "foo.bar = \"fooey\"",
       int_input: "foo.bar = 42",
@@ -60,7 +60,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "yaml",
-      format: yodel.format_yaml,
+      format: yodel.yaml_format,
       extension: "yaml",
       string_input: "foo.bar: fooey",
       int_input: "foo.bar: 42",
@@ -85,7 +85,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "json",
-      format: yodel.format_json,
+      format: yodel.json_format,
       extension: "json",
       string_input: "\"foo\": {\"bar\": \"fooey\"}",
       int_input: "\"foo\": {\"bar\": 42}",
@@ -120,7 +120,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "auto (toml)",
-      format: yodel.format_auto,
+      format: yodel.auto_format,
       extension: "toml",
       string_input: "foo.bar = \"fooey\"",
       int_input: "foo.bar = 42",
@@ -147,7 +147,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "auto (yaml)",
-      format: yodel.format_auto,
+      format: yodel.auto_format,
       extension: "yaml",
       string_input: "foo.bar: fooey",
       int_input: "foo.bar: 42",
@@ -172,7 +172,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "auto (json)",
-      format: yodel.format_auto,
+      format: yodel.auto_format,
       extension: "json",
       string_input: "\"foo\": {\"bar\": \"fooey\"}",
       int_input: "\"foo\": {\"bar\": 42}",

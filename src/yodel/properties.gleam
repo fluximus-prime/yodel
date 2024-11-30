@@ -1,6 +1,6 @@
 import gleam/dict.{type Dict}
 import gleam/result
-import yodel/errors.{type GetError, PathNotFound}
+import yodel/path
 
 pub opaque type Properties {
   Properties(entries: Dict(Path, Value))
@@ -9,16 +9,33 @@ pub opaque type Properties {
 pub type Path =
   String
 
-pub type Value =
-  String
+pub type Value {
+  StringValue(String)
+  IntValue(Int)
+  FloatValue(Float)
+  BoolValue(Bool)
+  NullValue
+}
+
+pub type GetError {
+  PathNotFound(path: String)
+  TypeError(path: String, error: TypeError)
+}
+
+pub type TypeError {
+  ExpectedString(got: Value)
+  ExpectedInt(got: Value)
+  ExpectedFloat(got: Value)
+  ExpectedBool(got: Value)
+}
 
 pub fn new() -> Properties {
   Properties(entries: dict.new())
 }
 
-pub fn get(from: Properties, get: Path) -> Result(Value, GetError) {
-  dict.get(from.entries, get)
-  |> result.map_error(fn(_) { PathNotFound(get) })
+pub fn get(from props: Properties, get path: Path) -> Result(Value, GetError) {
+  dict.get(props.entries, path)
+  |> result.map_error(fn(_) { PathNotFound(path) })
 }
 
 pub fn insert(
@@ -44,6 +61,66 @@ pub fn fold(
   dict.fold(props.entries, initial, fun)
 }
 
-pub fn size(props: Properties) -> Int {
+pub fn size(of props: Properties) -> Int {
   dict.size(props.entries)
+}
+
+pub fn delete(from props: Properties, delete path: path.Path) -> Properties {
+  Properties(dict.delete(props.entries, path.path_to_string(path)))
+}
+
+pub fn string(for path: path.Path, value value: String) -> Properties {
+  insert_string(new(), path.path_to_string(path), value)
+}
+
+pub fn int(for path: path.Path, value value: Int) -> Properties {
+  insert_int(new(), path.path_to_string(path), value)
+}
+
+pub fn float(for path: path.Path, value value: Float) -> Properties {
+  insert_float(new(), path.path_to_string(path), value)
+}
+
+pub fn bool(for path: path.Path, value value: Bool) -> Properties {
+  insert_bool(new(), path.path_to_string(path), value)
+}
+
+pub fn null(for path: path.Path) -> Properties {
+  insert_null(new(), path.path_to_string(path))
+}
+
+pub fn insert_string(
+  into props: Properties,
+  for path: Path,
+  insert value: String,
+) -> Properties {
+  insert(props, path, StringValue(value))
+}
+
+pub fn insert_int(
+  into props: Properties,
+  for path: Path,
+  insert value: Int,
+) -> Properties {
+  insert(props, path, IntValue(value))
+}
+
+pub fn insert_float(
+  into props: Properties,
+  for path: Path,
+  insert value: Float,
+) -> Properties {
+  insert(props, path, FloatValue(value))
+}
+
+pub fn insert_bool(
+  into props: Properties,
+  for path: Path,
+  insert value: Bool,
+) -> Properties {
+  insert(props, path, BoolValue(value))
+}
+
+pub fn insert_null(into props: Properties, for path: Path) -> Properties {
+  insert(props, path, NullValue)
 }

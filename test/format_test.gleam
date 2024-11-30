@@ -20,7 +20,7 @@ pub fn parser_tests() {
   let test_cases = [
     TestCase(
       format_name: "json",
-      format: yodel.format_json,
+      format: yodel.json_format,
       extensions: ["json", "jsn", "json5", "jsonc"],
       content: "
       {
@@ -33,7 +33,7 @@ pub fn parser_tests() {
     ),
     TestCase(
       format_name: "yaml",
-      format: yodel.format_yaml,
+      format: yodel.yaml_format,
       extensions: ["yaml", "yml"],
       content: "
       foo:
@@ -43,7 +43,7 @@ pub fn parser_tests() {
     ),
     TestCase(
       format_name: "toml",
-      format: yodel.format_toml,
+      format: yodel.toml_format,
       extensions: ["toml", "tml"],
       content: "
       [foo]

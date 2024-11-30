@@ -1,10 +1,11 @@
 import gleam/float
 import gleam/int
+import gleam/result
 import gleam/string
-import yodel/errors.{
-  type GetError, BoolValue, FloatValue, IntValue, PathNotFound, TypeError,
+import yodel/properties.{
+  type GetError, type Properties, BoolValue, ExpectedBool, ExpectedFloat,
+  ExpectedInt, ExpectedString, FloatValue, IntValue, StringValue, TypeError,
 }
-import yodel/properties.{type Properties}
 
 pub opaque type Context {
   Context(properties: Properties)
@@ -16,8 +17,22 @@ pub fn new(from properties: Properties) -> Context {
 
 pub fn get_string(ctx: Context, path: String) -> Result(String, GetError) {
   case properties.get(ctx.properties, path) {
+    Ok(StringValue(value)) -> Ok(value)
+    Ok(value) -> Error(TypeError(path:, error: ExpectedString(got: value)))
+    Error(e) -> Error(e)
+  }
+}
+
+pub fn parse_string(ctx: Context, path: String) -> Result(String, GetError) {
+  case get_string(ctx, path) {
     Ok(value) -> Ok(value)
-    Error(_) -> Error(PathNotFound(path: path))
+    Error(TypeError(..)) -> {
+      case properties.get(ctx.properties, path) {
+        Ok(value) -> Ok(string.inspect(value))
+        Error(e) -> Error(e)
+      }
+    }
+    Error(e) -> Error(e)
   }
 }
 
@@ -29,12 +44,24 @@ pub fn get_string_or(ctx: Context, path: String, default: String) -> String {
 }
 
 pub fn get_int(ctx: Context, path: String) -> Result(Int, GetError) {
-  case get_string(ctx, path) {
-    Ok(value) -> {
-      case int.parse(value) {
-        Ok(int) -> Ok(int)
-        Error(_) ->
-          Error(TypeError(path:, expected: IntValue, got: string.inspect(value)))
+  case properties.get(ctx.properties, path) {
+    Ok(IntValue(value)) -> Ok(value)
+    Ok(value) -> Error(TypeError(path:, error: ExpectedInt(got: value)))
+    Error(e) -> Error(e)
+  }
+}
+
+pub fn parse_int(ctx: Context, path: String) -> Result(Int, GetError) {
+  case get_int(ctx, path) {
+    Ok(value) -> Ok(value)
+    Error(TypeError(..)) -> {
+      case parse_string(ctx, path) {
+        Ok(value) ->
+          int.parse(value)
+          |> result.map_error(fn(_) {
+            TypeError(path:, error: ExpectedInt(got: StringValue(value)))
+          })
+        Error(e) -> Error(e)
       }
     }
     Error(e) -> Error(e)
@@ -49,16 +76,24 @@ pub fn get_int_or(ctx: Context, path: String, default: Int) -> Int {
 }
 
 pub fn get_float(ctx: Context, path: String) -> Result(Float, GetError) {
-  case get_string(ctx, path) {
-    Ok(value) -> {
-      case float.parse(value) {
-        Ok(float) -> Ok(float)
-        Error(_) ->
-          Error(TypeError(
-            path:,
-            expected: FloatValue,
-            got: string.inspect(value),
-          ))
+  case properties.get(ctx.properties, path) {
+    Ok(FloatValue(value)) -> Ok(value)
+    Ok(value) -> Error(TypeError(path:, error: ExpectedFloat(got: value)))
+    Error(e) -> Error(e)
+  }
+}
+
+pub fn parse_float(ctx: Context, path: String) -> Result(Float, GetError) {
+  case get_float(ctx, path) {
+    Ok(value) -> Ok(value)
+    Error(TypeError(..)) -> {
+      case parse_string(ctx, path) {
+        Ok(value) ->
+          float.parse(value)
+          |> result.map_error(fn(_) {
+            TypeError(path:, error: ExpectedFloat(got: StringValue(value)))
+          })
+        Error(e) -> Error(e)
       }
     }
     Error(e) -> Error(e)
@@ -73,11 +108,22 @@ pub fn get_float_or(ctx: Context, path: String, default: Float) -> Float {
 }
 
 pub fn get_bool(ctx: Context, path: String) -> Result(Bool, GetError) {
+  case properties.get(ctx.properties, path) {
+    Ok(BoolValue(value)) -> Ok(value)
+    Ok(value) -> Error(TypeError(path:, error: ExpectedBool(got: value)))
+    Error(e) -> Error(e)
+  }
+}
+
+pub fn parse_bool(ctx: Context, path: String) -> Result(Bool, GetError) {
   case get_string(ctx, path) {
-    Ok("True") -> Ok(True)
-    Ok("False") -> Ok(False)
     Ok(value) ->
-      Error(TypeError(path:, expected: BoolValue, got: string.inspect(value)))
+      case value |> string.lowercase |> string.trim {
+        "true" -> Ok(True)
+        "false" -> Ok(False)
+        _ ->
+          Error(TypeError(path:, error: ExpectedBool(got: StringValue(value))))
+      }
     Error(e) -> Error(e)
   }
 }

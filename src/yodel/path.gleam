@@ -10,7 +10,7 @@ pub type Path =
   List(PathSegment)
 
 pub fn new() -> Path {
-  []
+  list.new()
 }
 
 pub fn add_segment(path: Path, segment: String) -> Path {
