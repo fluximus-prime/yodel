@@ -3,7 +3,7 @@ import gleam/int
 import gleam/result
 import gleam/string
 import yodel/properties.{
-  type GetError, type Properties, BoolValue, ExpectedBool, ExpectedFloat,
+  type Properties, type PropertiesError, BoolValue, ExpectedBool, ExpectedFloat,
   ExpectedInt, ExpectedString, FloatValue, IntValue, StringValue, TypeError,
 }
 
@@ -15,7 +15,7 @@ pub fn new(from properties: Properties) -> Context {
   Context(properties:)
 }
 
-pub fn get_string(ctx: Context, path: String) -> Result(String, GetError) {
+pub fn get_string(ctx: Context, path: String) -> Result(String, PropertiesError) {
   case properties.get(ctx.properties, path) {
     Ok(StringValue(value)) -> Ok(value)
     Ok(value) -> Error(TypeError(path:, error: ExpectedString(got: value)))
@@ -23,7 +23,10 @@ pub fn get_string(ctx: Context, path: String) -> Result(String, GetError) {
   }
 }
 
-pub fn parse_string(ctx: Context, path: String) -> Result(String, GetError) {
+pub fn parse_string(
+  ctx: Context,
+  path: String,
+) -> Result(String, PropertiesError) {
   case get_string(ctx, path) {
     Ok(value) -> Ok(value)
     Error(TypeError(..)) -> {
@@ -43,7 +46,7 @@ pub fn get_string_or(ctx: Context, path: String, default: String) -> String {
   }
 }
 
-pub fn get_int(ctx: Context, path: String) -> Result(Int, GetError) {
+pub fn get_int(ctx: Context, path: String) -> Result(Int, PropertiesError) {
   case properties.get(ctx.properties, path) {
     Ok(IntValue(value)) -> Ok(value)
     Ok(value) -> Error(TypeError(path:, error: ExpectedInt(got: value)))
@@ -51,7 +54,7 @@ pub fn get_int(ctx: Context, path: String) -> Result(Int, GetError) {
   }
 }
 
-pub fn parse_int(ctx: Context, path: String) -> Result(Int, GetError) {
+pub fn parse_int(ctx: Context, path: String) -> Result(Int, PropertiesError) {
   case get_int(ctx, path) {
     Ok(value) -> Ok(value)
     Error(TypeError(..)) -> {
@@ -75,7 +78,7 @@ pub fn get_int_or(ctx: Context, path: String, default: Int) -> Int {
   }
 }
 
-pub fn get_float(ctx: Context, path: String) -> Result(Float, GetError) {
+pub fn get_float(ctx: Context, path: String) -> Result(Float, PropertiesError) {
   case properties.get(ctx.properties, path) {
     Ok(FloatValue(value)) -> Ok(value)
     Ok(value) -> Error(TypeError(path:, error: ExpectedFloat(got: value)))
@@ -83,7 +86,7 @@ pub fn get_float(ctx: Context, path: String) -> Result(Float, GetError) {
   }
 }
 
-pub fn parse_float(ctx: Context, path: String) -> Result(Float, GetError) {
+pub fn parse_float(ctx: Context, path: String) -> Result(Float, PropertiesError) {
   case get_float(ctx, path) {
     Ok(value) -> Ok(value)
     Error(TypeError(..)) -> {
@@ -107,7 +110,7 @@ pub fn get_float_or(ctx: Context, path: String, default: Float) -> Float {
   }
 }
 
-pub fn get_bool(ctx: Context, path: String) -> Result(Bool, GetError) {
+pub fn get_bool(ctx: Context, path: String) -> Result(Bool, PropertiesError) {
   case properties.get(ctx.properties, path) {
     Ok(BoolValue(value)) -> Ok(value)
     Ok(value) -> Error(TypeError(path:, error: ExpectedBool(got: value)))
@@ -115,7 +118,7 @@ pub fn get_bool(ctx: Context, path: String) -> Result(Bool, GetError) {
   }
 }
 
-pub fn parse_bool(ctx: Context, path: String) -> Result(Bool, GetError) {
+pub fn parse_bool(ctx: Context, path: String) -> Result(Bool, PropertiesError) {
   case get_string(ctx, path) {
     Ok(value) ->
       case value |> string.lowercase |> string.trim {

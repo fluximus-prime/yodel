@@ -17,7 +17,7 @@ pub type Value {
   NullValue
 }
 
-pub type GetError {
+pub type PropertiesError {
   PathNotFound(path: String)
   TypeError(path: String, error: TypeError)
 }
@@ -33,7 +33,10 @@ pub fn new() -> Properties {
   Properties(entries: dict.new())
 }
 
-pub fn get(from props: Properties, get path: Path) -> Result(Value, GetError) {
+pub fn get(
+  from props: Properties,
+  get path: Path,
+) -> Result(Value, PropertiesError) {
   dict.get(props.entries, path)
   |> result.map_error(fn(_) { PathNotFound(path) })
 }

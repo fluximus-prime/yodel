@@ -403,7 +403,7 @@ pub fn integration_tests() {
             it("fails in strict mode with missing env var", fn() {
               yodel.default_options()
               |> yodel.with_format(format)
-              |> yodel.with_resolve_mode(yodel.resolve_strict)
+              |> yodel.with_resolve_mode(yodel.strict_resolve)
               |> yodel.load_with_options(missing_placeholder)
               |> expect.to_be_error
               |> expect.to_equal(
@@ -413,7 +413,7 @@ pub fn integration_tests() {
             it("preserves placeholder in lenient mode", fn() {
               yodel.default_options()
               |> yodel.with_format(format)
-              |> yodel.with_resolve_mode(yodel.resolve_lenient)
+              |> yodel.with_resolve_mode(yodel.lenient_resolve)
               |> yodel.load_with_options(missing_placeholder)
               |> expect.to_be_ok
               |> yodel.get_string("foo")
