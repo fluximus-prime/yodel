@@ -1,8 +1,10 @@
-# yodel
+# Yodel
 
 ### 🎶 Yo-de-lay-ee-configs!
 
-Yodel supports JSON, YAML and TOML configuration files.
+Yodel is a type-safe configuration loader for Gleam that supports JSON, YAML,
+and TOML configs with automatic format detection, environment variable
+resolution, and an intuitive dot-notation API for accessing your config values. 🚀
 
 [![Package Version](https://img.shields.io/hexpm/v/yodel)](https://hex.pm/packages/yodel)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/yodel/)

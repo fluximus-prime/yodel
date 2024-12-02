@@ -1,11 +1,28 @@
-import gleam/dict
 import gleam/list
 import gleam/result
 import gleam/string
 import simplifile
-import yodel/types.{
-  type ConfigError, type Path, type Properties, type Value, FileError,
-  FileNotFound, FilePermissionDenied, FileReadError,
+import yodel/errors.{
+  type ConfigError, FileError, FileNotFound, FilePermissionDenied, FileReadError,
+}
+
+pub type Input {
+  File(path: String)
+  Content(content: String)
+}
+
+pub fn get_content(input: String) -> Result(String, ConfigError) {
+  case input |> detect_input {
+    File(path) -> read_file(path)
+    Content(content) -> Ok(content)
+  }
+}
+
+pub fn detect_input(input: String) -> Input {
+  case string.trim(input) |> simplifile.is_file {
+    Ok(True) -> File(input)
+    _ -> Content(input)
+  }
 }
 
 pub fn get_extension_from_path(path: String) -> String {
@@ -28,8 +45,4 @@ fn map_simplifile_error(error: simplifile.FileError) -> ConfigError {
     simplifile.Enoent -> FileNotFound(simplifile.describe_error(error))
     _ -> FileReadError(simplifile.describe_error(error))
   })
-}
-
-pub fn new_properties(path: Path, value: Value) -> Properties {
-  dict.insert(dict.new(), path, value)
 }

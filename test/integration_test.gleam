@@ -6,7 +6,7 @@ import startest.{describe, it}
 import startest/expect
 import test_helpers.{with_env}
 import yodel.{type Format}
-import yodel/types.{ResolverError, UnresolvedPlaceholder}
+import yodel/errors.{ResolverError, UnresolvedPlaceholder}
 
 type TestCase {
   TestCase(
@@ -33,7 +33,7 @@ pub fn integration_tests() {
   let test_cases = [
     TestCase(
       format_name: "toml",
-      format: yodel.toml,
+      format: yodel.toml_format,
       extension: "toml",
       string_input: "foo.bar = \"fooey\"",
       int_input: "foo.bar = 42",
@@ -60,7 +60,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "yaml",
-      format: yodel.yaml,
+      format: yodel.yaml_format,
       extension: "yaml",
       string_input: "foo.bar: fooey",
       int_input: "foo.bar: 42",
@@ -85,7 +85,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "json",
-      format: yodel.json,
+      format: yodel.json_format,
       extension: "json",
       string_input: "\"foo\": {\"bar\": \"fooey\"}",
       int_input: "\"foo\": {\"bar\": 42}",
@@ -120,7 +120,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "auto (toml)",
-      format: yodel.auto_detect,
+      format: yodel.auto_format,
       extension: "toml",
       string_input: "foo.bar = \"fooey\"",
       int_input: "foo.bar = 42",
@@ -147,7 +147,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "auto (yaml)",
-      format: yodel.auto_detect,
+      format: yodel.auto_format,
       extension: "yaml",
       string_input: "foo.bar: fooey",
       int_input: "foo.bar: 42",
@@ -172,7 +172,7 @@ pub fn integration_tests() {
     ),
     TestCase(
       format_name: "auto (json)",
-      format: yodel.auto_detect,
+      format: yodel.auto_format,
       extension: "json",
       string_input: "\"foo\": {\"bar\": \"fooey\"}",
       int_input: "\"foo\": {\"bar\": 42}",
@@ -403,7 +403,7 @@ pub fn integration_tests() {
             it("fails in strict mode with missing env var", fn() {
               yodel.default_options()
               |> yodel.with_format(format)
-              |> yodel.with_resolve_mode(yodel.strict)
+              |> yodel.with_resolve_mode(yodel.strict_resolve)
               |> yodel.load_with_options(missing_placeholder)
               |> expect.to_be_error
               |> expect.to_equal(
@@ -413,7 +413,7 @@ pub fn integration_tests() {
             it("preserves placeholder in lenient mode", fn() {
               yodel.default_options()
               |> yodel.with_format(format)
-              |> yodel.with_resolve_mode(yodel.lenient)
+              |> yodel.with_resolve_mode(yodel.lenient_resolve)
               |> yodel.load_with_options(missing_placeholder)
               |> expect.to_be_ok
               |> yodel.get_string("foo")

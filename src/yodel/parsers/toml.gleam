@@ -1,21 +1,20 @@
-import birl
-import gleam/bool
 import gleam/dict.{type Dict}
-import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
 import tom.{
   type Date, type DateTime, type Time, type Toml, Array, ArrayOfTables, Bool,
-  Date, DateTime, Float, Infinity, InlineTable, Int, Nan, String, Table, Time,
+  Date, DateTime, Float, Infinity, InlineTable, Int, Local, Nan, Negative,
+  Offset, Positive, String, Table, Time,
 }
+import yodel/errors.{
+  type ConfigError, InvalidStructure, InvalidSyntax, Location, ParseError,
+  SyntaxError,
+}
+import yodel/input.{type Input, Content, File}
 import yodel/options.{type Format, Auto, Toml}
 import yodel/path.{type Path}
-import yodel/types.{
-  type ConfigError, type Input, type Properties, Content, File, InvalidStructure,
-  InvalidSyntax, Location, ParseError, SyntaxError,
-}
-import yodel/utils
+import yodel/properties.{type Properties}
 
 const known_extensions = ["toml", "tml"]
 
@@ -27,7 +26,7 @@ pub fn detect(input: Input) -> Format {
 }
 
 fn detect_format_from_path(path: String) -> Format {
-  let ext = utils.get_extension_from_path(path)
+  let ext = input.get_extension_from_path(path)
   case list.contains(known_extensions, ext) {
     True -> options.Toml
     False -> Auto
@@ -54,85 +53,89 @@ pub fn parse(from content: String) -> Result(Properties, ConfigError) {
 }
 
 fn parse_properties(doc: Dict(String, Toml), path: Path) -> Properties {
-  dict.fold(doc, dict.new(), fn(acc, key, value) {
+  dict.fold(doc, properties.new(), fn(acc, key, value) {
     let path = path |> path.add_segment(key)
     let props = parse_value(value, path)
-    dict.merge(acc, props)
+    properties.merge(acc, props)
   })
 }
 
 fn parse_value(value: Toml, path: Path) -> Properties {
   case value {
-    Int(i) ->
-      dict.insert(dict.new(), path.path_to_string(path), int.to_string(i))
-    Float(f) ->
-      dict.insert(dict.new(), path.path_to_string(path), float.to_string(f))
-    Infinity(_) -> dict.insert(dict.new(), path.path_to_string(path), "nil")
-    Nan(_) -> dict.insert(dict.new(), path.path_to_string(path), "nil")
-    Bool(b) ->
-      dict.insert(dict.new(), path.path_to_string(path), bool.to_string(b))
-    String(s) -> dict.insert(dict.new(), path.path_to_string(path), s)
-    Date(d) ->
-      dict.insert(dict.new(), path.path_to_string(path), format_date(d))
-    Time(t) ->
-      dict.insert(dict.new(), path.path_to_string(path), format_time(t))
-    DateTime(dt) ->
-      dict.insert(dict.new(), path.path_to_string(path), format_datetime(dt))
-    Array(array) -> {
-      list.index_fold(array, dict.new(), fn(acc, item, index) {
-        let path = path |> path.add_index(index)
-        let props = parse_value(item, path)
-        dict.merge(acc, props)
-      })
-    }
-    ArrayOfTables(tables) -> {
-      list.index_fold(tables, dict.new(), fn(acc, table, index) {
-        let path = path |> path.add_index(index)
-        let props = parse_properties(table, path)
-        dict.merge(acc, props)
-      })
-    }
+    String(value) -> properties.string(path, value)
+    Int(value) -> properties.int(path, value)
+    Float(value) -> properties.float(path, value)
+    Bool(value) -> properties.bool(path, value)
+
+    Infinity(_) -> properties.null(path)
+    Nan(_) -> properties.null(path)
+
+    Date(value) -> properties.string(path, date_to_string(value))
+    Time(value) -> properties.string(path, time_to_string(value))
+    DateTime(value) -> properties.string(path, date_time_to_string(value))
+
+    Array(array) -> parse_array(array, path)
+    ArrayOfTables(tables) -> parse_array_of_tables(tables, path)
     Table(table) -> parse_properties(table, path)
     InlineTable(table) -> parse_properties(table, path)
   }
 }
 
-fn format_datetime(dt: DateTime) -> String {
-  let d = format_date(dt.date)
-  let t = format_time(dt.time)
-  let f = d <> "T" <> t
-  case birl.from_naive(f) {
-    Ok(dt) -> birl.to_naive_date_string(dt)
-    Error(_) -> f
+fn date_time_to_string(datetime: tom.DateTime) -> String {
+  let date = date_to_string(datetime.date)
+  let time = time_to_string(datetime.time)
+  let offset = offset_to_string(datetime.offset)
+  date <> "T" <> time <> offset
+}
+
+fn date_to_string(date: tom.Date) -> String {
+  int.to_string(date.year)
+  <> "-"
+  <> int.to_string(date.month)
+  <> "-"
+  <> int.to_string(date.day)
+}
+
+fn time_to_string(time: tom.Time) -> String {
+  int.to_string(time.hour)
+  <> ":"
+  <> int.to_string(time.minute)
+  <> ":"
+  <> int.to_string(time.second)
+  <> ":"
+  <> int.to_string(time.millisecond)
+}
+
+fn offset_to_string(offset: tom.Offset) -> String {
+  case offset {
+    Local -> ""
+    Offset(direction, hours, minutes) -> {
+      let sign = case direction {
+        Positive -> "+"
+        Negative -> "-"
+      }
+      sign <> int.to_string(hours) <> ":" <> int.to_string(minutes)
+    }
   }
 }
 
-fn format_date(date: Date) -> String {
-  let s =
-    int.to_string(date.year)
-    <> "-"
-    <> int.to_string(date.month)
-    <> "-"
-    <> int.to_string(date.day)
-  case birl.from_naive(s) {
-    Ok(d) -> birl.to_date_string(d)
-    Error(_) -> s
-  }
+fn parse_array(array: List(Toml), path: Path) -> Properties {
+  list.index_fold(array, properties.new(), fn(acc, item, index) {
+    let path = path |> path.add_index(index)
+    let props = parse_value(item, path)
+    properties.merge(acc, props)
+  })
 }
 
-fn format_time(time: Time) -> String {
-  let s =
-    int.to_string(time.hour)
-    <> ":"
-    <> int.to_string(time.minute)
-    <> ":"
-    <> int.to_string(time.second)
-    <> ":"
-    <> int.to_string(time.millisecond)
-  case birl.from_naive(s) {
-    Ok(t) -> birl.to_time_string(t)
-    Error(_) -> s
-  }
+fn parse_array_of_tables(
+  tables: List(Dict(String, Toml)),
+  path: Path,
+) -> Properties {
+  list.index_fold(tables, properties.new(), fn(acc, table, index) {
+    let path = path |> path.add_index(index)
+    let props = parse_properties(table, path)
+    properties.merge(acc, props)
+  })
 }
 
 fn map_tom_error(error: tom.ParseError) -> ConfigError {

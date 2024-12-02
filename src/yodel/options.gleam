@@ -1,5 +1,5 @@
-pub opaque type YodelOptions {
-  YodelOptions(format: Format, resolve: ResolveOptions, validate: Bool)
+pub opaque type Options {
+  Options(format: Format, resolve: ResolveOptions)
 }
 
 pub type Format {
@@ -22,12 +22,10 @@ pub fn new(
   format format: Format,
   resolve_enabled resolve_enabled: Bool,
   resolve_mode resolve_mode: ResolveMode,
-  validate validate: Bool,
-) -> YodelOptions {
-  YodelOptions(
+) -> Options {
+  Options(
     format:,
     resolve: new_resolve_options(enabled: resolve_enabled, mode: resolve_mode),
-    validate:,
   )
 }
 
@@ -38,50 +36,36 @@ pub fn new_resolve_options(
   ResolveOptions(enabled:, mode:)
 }
 
-pub fn default() -> YodelOptions {
-  new(Auto, True, Lenient, True)
+pub fn default() -> Options {
+  new(Auto, True, Lenient)
 }
 
-pub fn with_format(
-  options options: YodelOptions,
-  format format: Format,
-) -> YodelOptions {
-  new(format, options.resolve.enabled, options.resolve.mode, options.validate)
+pub fn with_format(options options: Options, format format: Format) -> Options {
+  new(format, options.resolve.enabled, options.resolve.mode)
 }
 
 pub fn with_resolve_enabled(
-  options options: YodelOptions,
+  options options: Options,
   enabled enabled: Bool,
-) -> YodelOptions {
-  new(options.format, enabled, options.resolve.mode, options.validate)
+) -> Options {
+  new(options.format, enabled, options.resolve.mode)
 }
 
 pub fn with_resolve_mode(
-  options options: YodelOptions,
+  options options: Options,
   mode mode: ResolveMode,
-) -> YodelOptions {
-  new(options.format, options.resolve.enabled, mode, options.validate)
+) -> Options {
+  new(options.format, options.resolve.enabled, mode)
 }
 
-pub fn with_validate_enabled(
-  options options: YodelOptions,
-  validate validate: Bool,
-) -> YodelOptions {
-  new(options.format, options.resolve.enabled, options.resolve.mode, validate)
-}
-
-pub fn format(options options: YodelOptions) -> Format {
+pub fn get_format(options options: Options) -> Format {
   options.format
 }
 
-pub fn resolve_enabled(options options: YodelOptions) -> Bool {
+pub fn is_resolve_enabled(options options: Options) -> Bool {
   options.resolve.enabled
 }
 
-pub fn resolve_mode(options options: YodelOptions) -> ResolveMode {
+pub fn get_resolve_mode(options options: Options) -> ResolveMode {
   options.resolve.mode
-}
-
-pub fn validate_enabled(options options: YodelOptions) -> Bool {
-  options.validate
 }

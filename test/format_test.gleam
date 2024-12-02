@@ -2,9 +2,9 @@ import gleam/list
 import startest.{describe, it}
 import startest/expect
 import yodel.{type Format}
+import yodel/input.{type Input, Content, File}
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/types.{type DetectFunction, Content, File}
 
 type TestCase {
   TestCase(
@@ -12,7 +12,7 @@ type TestCase {
     format: Format,
     extensions: List(String),
     content: String,
-    detect: DetectFunction,
+    detect: fn(Input) -> Format,
   )
 }
 
@@ -20,7 +20,7 @@ pub fn parser_tests() {
   let test_cases = [
     TestCase(
       format_name: "json",
-      format: yodel.json,
+      format: yodel.json_format,
       extensions: ["json", "jsn", "json5", "jsonc"],
       content: "
       {
@@ -33,7 +33,7 @@ pub fn parser_tests() {
     ),
     TestCase(
       format_name: "yaml",
-      format: yodel.yaml,
+      format: yodel.yaml_format,
       extensions: ["yaml", "yml"],
       content: "
       foo:
@@ -43,7 +43,7 @@ pub fn parser_tests() {
     ),
     TestCase(
       format_name: "toml",
-      format: yodel.toml,
+      format: yodel.toml_format,
       extensions: ["toml", "tml"],
       content: "
       [foo]

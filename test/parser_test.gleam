@@ -1,13 +1,11 @@
-import gleam/dict
 import gleam/float
-import gleam/int
 import gleam/list
-import gleam/string
 import startest.{describe, it}
 import startest/expect
+import yodel/parser.{type ParseFunction}
 import yodel/parsers/toml
 import yodel/parsers/yaml
-import yodel/types.{type ParseFunction}
+import yodel/properties.{BoolValue, FloatValue, IntValue, StringValue}
 
 type TestCase {
   TestCase(
@@ -107,55 +105,50 @@ pub fn parser_tests() {
         it("loads basic value", fn() {
           parse(basic_input)
           |> expect.to_be_ok
-          |> dict.get("foo.bar")
+          |> properties.get("foo.bar")
           |> expect.to_be_ok
-          |> expect.to_equal("fooey")
+          |> expect.to_equal(StringValue("fooey"))
         }),
         it("loads array", fn() {
           parse(array_input)
           |> expect.to_be_ok
-          |> dict.get("foo[1].baz")
+          |> properties.get("foo[1].baz")
           |> expect.to_be_ok
-          |> expect.to_equal("fooed")
+          |> expect.to_equal(StringValue("fooed"))
         }),
         it("returns a string", fn() {
           parse(string_input)
           |> expect.to_be_ok
-          |> dict.get("foo.bar")
+          |> properties.get("foo.bar")
           |> expect.to_be_ok
-          |> expect.to_equal("fooey")
+          |> expect.to_equal(StringValue("fooey"))
         }),
         it("returns an int", fn() {
           parse(int_input)
           |> expect.to_be_ok
-          |> dict.get("foo.bar")
+          |> properties.get("foo.bar")
           |> expect.to_be_ok
-          |> int.parse
-          |> expect.to_be_ok
-          |> expect.to_equal(42)
+          |> expect.to_equal(IntValue(42))
         }),
         it("returns a float", fn() {
-          parse(float_input)
-          |> expect.to_be_ok
-          |> dict.get("foo.bar")
-          |> expect.to_be_ok
-          |> float.parse
-          |> expect.to_be_ok
+          case
+            parse(float_input)
+            |> expect.to_be_ok
+            |> properties.get("foo.bar")
+            |> expect.to_be_ok
+          {
+            FloatValue(f) -> f
+            _ -> -1.0
+          }
           |> float.to_precision(3)
           |> expect.to_equal(99.999)
         }),
         it("returns a bool", fn() {
-          case
-            parse(bool_input)
-            |> expect.to_be_ok
-            |> dict.get("foo.bar")
-            |> expect.to_be_ok
-            |> string.lowercase
-          {
-            "true" -> True
-            _ -> False
-          }
-          |> expect.to_equal(True)
+          parse(bool_input)
+          |> expect.to_be_ok
+          |> properties.get("foo.bar")
+          |> expect.to_be_ok
+          |> expect.to_equal(BoolValue(True))
         }),
       ])
     }),

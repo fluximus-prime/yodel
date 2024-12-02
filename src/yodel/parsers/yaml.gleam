@@ -2,19 +2,17 @@ import glaml.{
   type DocNode, DocNodeBool, DocNodeFloat, DocNodeInt, DocNodeMap, DocNodeNil,
   DocNodeSeq, DocNodeStr,
 }
-import gleam/bool
-import gleam/dict
 import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
+import yodel/errors.{
+  type ConfigError, InvalidSyntax, Location, ParseError, SyntaxError,
+}
+import yodel/input.{type Input, Content, File}
 import yodel/options.{type Format, Auto, Json, Yaml}
 import yodel/path.{type Path}
-import yodel/types.{
-  type ConfigError, type Input, type Properties, Content, File, InvalidSyntax,
-  Location, ParseError, SyntaxError,
-}
-import yodel/utils
+import yodel/properties.{type Properties}
 
 const known_extensions = [
   #("json", ["json", "jsn", "json5", "jsonc"]), #("yaml", ["yaml", "yml"]),
@@ -32,7 +30,7 @@ pub fn detect(input: Input) -> Format {
 }
 
 fn detect_format_from_path(path: String) -> Format {
-  let ext = utils.get_extension_from_path(path)
+  let ext = input.get_extension_from_path(path)
   case
     list.find(known_extensions, fn(entry) {
       let #(_, exts) = entry
@@ -85,31 +83,14 @@ pub fn parse(from string: String) -> Result(Properties, ConfigError) {
 
 fn parse_properties(node: DocNode, path: Path) -> Properties {
   case node {
-    DocNodeMap(pairs) -> {
-      list.fold(pairs, dict.new(), fn(acc, pair) {
-        let key = extract_key(pair.0)
-        let path = path |> path.add_segment(key)
-        let props = parse_properties(pair.1, path)
-        dict.merge(acc, props)
-      })
-    }
+    DocNodeStr(value) -> properties.string(path, value)
+    DocNodeInt(value) -> properties.int(path, value)
+    DocNodeFloat(value) -> properties.float(path, value)
+    DocNodeBool(value) -> properties.bool(path, value)
+    DocNodeNil -> properties.null(path)
 
-    DocNodeSeq(items) -> {
-      list.index_fold(items, dict.new(), fn(acc, item, index) {
-        let path = path |> path.add_index(index)
-        let props = parse_properties(item, path)
-        dict.merge(acc, props)
-      })
-    }
-
-    DocNodeStr(value) -> utils.new_properties(path.path_to_string(path), value)
-    DocNodeBool(value) ->
-      utils.new_properties(path.path_to_string(path), bool.to_string(value))
-    DocNodeInt(value) ->
-      utils.new_properties(path.path_to_string(path), int.to_string(value))
-    DocNodeFloat(value) ->
-      utils.new_properties(path.path_to_string(path), float.to_string(value))
-    DocNodeNil -> utils.new_properties(path.path_to_string(path), "nil")
+    DocNodeMap(pairs) -> parse_map(pairs, path)
+    DocNodeSeq(items) -> parse_seq(items, path)
   }
 }
 
@@ -120,6 +101,23 @@ fn extract_key(node: DocNode) -> String {
     DocNodeFloat(value) -> float.to_string(value)
     _ -> string.inspect(node)
   }
+}
+
+fn parse_map(pairs: List(#(DocNode, DocNode)), path: Path) -> Properties {
+  list.fold(pairs, properties.new(), fn(acc, pair) {
+    let key = extract_key(pair.0)
+    let path = path |> path.add_segment(key)
+    let props = parse_properties(pair.1, path)
+    properties.merge(acc, props)
+  })
+}
+
+fn parse_seq(items: List(DocNode), path: Path) -> Properties {
+  list.index_fold(items, properties.new(), fn(acc, item, index) {
+    let path = path |> path.add_index(index)
+    let props = parse_properties(item, path)
+    properties.merge(acc, props)
+  })
 }
 
 fn map_glaml_error(error: glaml.DocError) -> ConfigError {
