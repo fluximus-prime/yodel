@@ -2,7 +2,7 @@ import envoy
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/regex.{type CompileError, type Regex}
+import gleam/regexp.{type CompileError, type Regexp}
 import gleam/result
 import gleam/string
 import yodel/errors.{
@@ -30,7 +30,7 @@ pub fn resolve_placeholders(
 
 fn resolve_value(
   value: String,
-  pattern: Regex,
+  pattern: Regexp,
   mode: ResolveMode,
   attempted: List(String),
 ) -> Result(String, ConfigError) {
@@ -62,8 +62,8 @@ fn resolve_value(
   }
 }
 
-fn find_next_placeholder(value: String, pattern: Regex) -> Option(Placeholder) {
-  case regex.scan(pattern, value) {
+fn find_next_placeholder(value: String, pattern: Regexp) -> Option(Placeholder) {
+  case regexp.scan(pattern, value) {
     [] -> None
     [match, ..] -> {
       case match.submatches {
@@ -97,8 +97,8 @@ fn resolve_placeholder(
   }
 }
 
-fn compile_placeholder_regex() -> Result(Regex, ConfigError) {
-  regex.from_string(placeholder_pattern) |> result.map_error(map_compile_error)
+fn compile_placeholder_regex() -> Result(Regexp, ConfigError) {
+  regexp.from_string(placeholder_pattern) |> result.map_error(map_compile_error)
 }
 
 fn map_compile_error(error: CompileError) -> ConfigError {
