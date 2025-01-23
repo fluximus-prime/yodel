@@ -7,7 +7,7 @@ repository = { type = "github", user = "fluximus-prime", repo = "yodel" }
 
 [dependencies]
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"
-glaml = ">= 1.0.1 and < 3.0.0"
+glaml = ">= 1.0.1 and < 4.0.0"
 envoy = ">= 1.0.2 and < 2.0.0"
 simplifile = ">= 2.2.0 and < 3.0.0"
 tom = ">= 0.3.0 and < 2.0.0"
