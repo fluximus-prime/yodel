@@ -1,13 +1,13 @@
 import glaml.{
-  type DocNode, DocNodeBool, DocNodeFloat, DocNodeInt, DocNodeMap, DocNodeNil,
-  DocNodeSeq, DocNodeStr,
+  type Node, NodeBool, NodeFloat, NodeInt, NodeMap, NodeNil, NodeSeq, NodeStr,
 }
 import gleam/float
 import gleam/int
 import gleam/list
 import gleam/string
 import yodel/errors.{
-  type ConfigError, InvalidSyntax, Location, ParseError, SyntaxError,
+  type ConfigError, InvalidStructure, InvalidSyntax, Location, ParseError,
+  SyntaxError,
 }
 import yodel/input.{type Input, Content, File}
 import yodel/options.{type Format, Auto, Json, Yaml}
@@ -15,7 +15,8 @@ import yodel/path.{type Path}
 import yodel/properties.{type Properties}
 
 const known_extensions = [
-  #("json", ["json", "jsn", "json5", "jsonc"]), #("yaml", ["yaml", "yml"]),
+  #("json", ["json", "jsn", "json5", "jsonc"]),
+  #("yaml", ["yaml", "yml"]),
 ]
 
 pub fn detect(input: Input) -> Format {
@@ -76,34 +77,41 @@ fn detect_yaml(content: String) -> Bool {
 
 pub fn parse(from string: String) -> Result(Properties, ConfigError) {
   case glaml.parse_string(string) {
-    Ok(doc) -> glaml.doc_node(doc) |> parse_properties(path.new()) |> Ok
+    Ok(docs) ->
+      docs
+      |> list.map(glaml.document_root)
+      |> list.fold(properties.new(), fn(acc, node) {
+        parse_properties(node, path.new())
+        |> properties.merge(acc)
+      })
+      |> Ok
     Error(err) -> Error(map_glaml_error(err))
   }
 }
 
-fn parse_properties(node: DocNode, path: Path) -> Properties {
+fn parse_properties(node: Node, path: Path) -> Properties {
   case node {
-    DocNodeStr(value) -> properties.string(path, value)
-    DocNodeInt(value) -> properties.int(path, value)
-    DocNodeFloat(value) -> properties.float(path, value)
-    DocNodeBool(value) -> properties.bool(path, value)
-    DocNodeNil -> properties.null(path)
+    NodeStr(value) -> properties.string(path, value)
+    NodeInt(value) -> properties.int(path, value)
+    NodeFloat(value) -> properties.float(path, value)
+    NodeBool(value) -> properties.bool(path, value)
+    NodeNil -> properties.null(path)
 
-    DocNodeMap(pairs) -> parse_map(pairs, path)
-    DocNodeSeq(items) -> parse_seq(items, path)
+    NodeMap(pairs) -> parse_map(pairs, path)
+    NodeSeq(items) -> parse_seq(items, path)
   }
 }
 
-fn extract_key(node: DocNode) -> String {
+fn extract_key(node: Node) -> String {
   case node {
-    DocNodeStr(value) -> value
-    DocNodeInt(value) -> int.to_string(value)
-    DocNodeFloat(value) -> float.to_string(value)
+    NodeStr(value) -> value
+    NodeInt(value) -> int.to_string(value)
+    NodeFloat(value) -> float.to_string(value)
     _ -> string.inspect(node)
   }
 }
 
-fn parse_map(pairs: List(#(DocNode, DocNode)), path: Path) -> Properties {
+fn parse_map(pairs: List(#(Node, Node)), path: Path) -> Properties {
   list.fold(pairs, properties.new(), fn(acc, pair) {
     let key = extract_key(pair.0)
     let path = path |> path.add_segment(key)
@@ -112,7 +120,7 @@ fn parse_map(pairs: List(#(DocNode, DocNode)), path: Path) -> Properties {
   })
 }
 
-fn parse_seq(items: List(DocNode), path: Path) -> Properties {
+fn parse_seq(items: List(Node), path: Path) -> Properties {
   list.index_fold(items, properties.new(), fn(acc, item, index) {
     let path = path |> path.add_index(index)
     let props = parse_properties(item, path)
@@ -120,13 +128,18 @@ fn parse_seq(items: List(DocNode), path: Path) -> Properties {
   })
 }
 
-fn map_glaml_error(error: glaml.DocError) -> ConfigError {
-  let glaml.DocError(msg, #(line, col)) = error
-  ParseError(
-    InvalidSyntax(SyntaxError(
-      format: "Json/Yaml",
-      location: Location(line, col),
-      message: msg,
-    )),
-  )
+fn map_glaml_error(error: glaml.YamlError) -> ConfigError {
+  case error {
+    glaml.UnexpectedParsingError ->
+      ParseError(InvalidStructure("Unexpected parsing error"))
+    glaml.ParsingError(msg, loc) -> {
+      ParseError(
+        InvalidSyntax(SyntaxError(
+          format: "Json/Yaml",
+          location: Location(loc.line, loc.column),
+          message: msg,
+        )),
+      )
+    }
+  }
 }
