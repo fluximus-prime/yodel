@@ -1,7 +1,7 @@
 name = "yodel"
-version = "0.2.0"
+version = "1.0.0"
 
-description = "Yodel: Yo-de-lay-ee-config!"
+description = "A type-safe configuration loader for Gleam that handles JSON, YAML, and TOML with environment variable resolution."
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "fluximus-prime", repo = "yodel" }
 
