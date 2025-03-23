@@ -1,1 +1,1 @@
-FROM ghcr.io/fluximus-prime/fluximus-workshop:latest@sha256:c29dc210d725eb3694e065bdb09db46cdb78d8e3617228f06a25326f2a4dab02
+FROM ghcr.io/fluximus-prime/fluximus-workshop:latest@sha256:bbb12841722bd44cc06f85072f4d49cc0127ee7e5e914eadccb9f772fbd2b87b
