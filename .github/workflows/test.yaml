@@ -1,4 +1,4 @@
-name: Lint & Test
+name: Format Check & Test
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
 
 jobs:
   lint:
-    name: Lint
+    name: Format Check
     runs-on: ubuntu-latest
 
     permissions:
@@ -30,7 +30,7 @@ jobs:
           version-file: .tool-versions
           version-type: strict
 
-      - name: Lint Source
+      - name: Format Check
         run: gleam format --check src test
 
   test:
