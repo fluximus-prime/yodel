@@ -3,9 +3,23 @@
   "extends": [
     "config:best-practices"
   ],
+  "automergeType": "branch",
+  "rangeStrategy": "widen",
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true
   },
-  "rangeStrategy": "widen"
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest"
+      ],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    }
+  ]
 }
