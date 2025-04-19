@@ -3,9 +3,9 @@ import gleam/int
 import gleam/list
 import gleam/string
 import tom.{
-  type Date, type DateTime, type Time, type Toml, Array, ArrayOfTables, Bool,
-  Date, DateTime, Float, Infinity, InlineTable, Int, Local, Nan, Negative,
-  Offset, Positive, String, Table, Time,
+  type Date, type DateTime, type Offset, type ParseError, type Time, type Toml,
+  Array, ArrayOfTables, Bool, Date, DateTime, Float, Infinity, InlineTable, Int,
+  Local, Nan, Negative, Offset, Positive, String, Table, Time,
 }
 import yodel/errors.{
   type ConfigError, InvalidStructure, InvalidSyntax, Location, ParseError,
@@ -28,7 +28,7 @@ pub fn detect(input: Input) -> Format {
 fn detect_format_from_path(path: String) -> Format {
   let ext = input.get_extension_from_path(path)
   case list.contains(known_extensions, ext) {
-    True -> options.Toml
+    True -> Toml
     False -> Auto
   }
 }
@@ -40,7 +40,7 @@ fn detect_format_from_content(content: String) -> Format {
     && !string.contains(trimmed, ": ")
     && !string.starts_with(trimmed, "---")
   {
-    True -> options.Toml
+    True -> Toml
     False -> Auto
   }
 }
@@ -81,14 +81,14 @@ fn parse_value(value: Toml, path: Path) -> Properties {
   }
 }
 
-fn date_time_to_string(datetime: tom.DateTime) -> String {
+fn date_time_to_string(datetime: DateTime) -> String {
   let date = date_to_string(datetime.date)
   let time = time_to_string(datetime.time)
   let offset = offset_to_string(datetime.offset)
   date <> "T" <> time <> offset
 }
 
-fn date_to_string(date: tom.Date) -> String {
+fn date_to_string(date: Date) -> String {
   int.to_string(date.year)
   <> "-"
   <> int.to_string(date.month)
@@ -96,7 +96,7 @@ fn date_to_string(date: tom.Date) -> String {
   <> int.to_string(date.day)
 }
 
-fn time_to_string(time: tom.Time) -> String {
+fn time_to_string(time: Time) -> String {
   int.to_string(time.hour)
   <> ":"
   <> int.to_string(time.minute)
@@ -106,7 +106,7 @@ fn time_to_string(time: tom.Time) -> String {
   <> int.to_string(time.millisecond)
 }
 
-fn offset_to_string(offset: tom.Offset) -> String {
+fn offset_to_string(offset: Offset) -> String {
   case offset {
     Local -> ""
     Offset(direction, hours, minutes) -> {
@@ -138,7 +138,7 @@ fn parse_array_of_tables(
   })
 }
 
-fn map_tom_error(error: tom.ParseError) -> ConfigError {
+fn map_tom_error(error: ParseError) -> ConfigError {
   ParseError(case error {
     tom.Unexpected(got, expected) ->
       InvalidSyntax(SyntaxError(
