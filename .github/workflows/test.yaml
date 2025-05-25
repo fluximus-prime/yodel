@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Setup BEAM Environment
-        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451 # v1
+        uses: erlef/setup-beam@8aa8a857c6be0daae6e97272bb299d5b942675a4 # v1
         with:
           version-file: .tool-versions
           version-type: strict
@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Setup BEAM Environment
-        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451 # v1
+        uses: erlef/setup-beam@8aa8a857c6be0daae6e97272bb299d5b942675a4 # v1
         with:
           version-file: .tool-versions
           version-type: strict
