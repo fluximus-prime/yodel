@@ -34,4 +34,4 @@ gleam_regexp = { version = ">= 1.0.0 and < 2.0.0" }
 gleam_stdlib = { version = ">= 0.34.0 and < 2.0.0" }
 simplifile = { version = ">= 2.2.0 and < 3.0.0" }
 startest = { version = "== 0.6.0" }
-tom = { version = ">= 0.3.0 and < 2.0.0" }
+tom = { version = ">= 0.3.0 and < 3.0.0" }
